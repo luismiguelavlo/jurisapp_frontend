@@ -1,3 +1,143 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-on-primary-container: #a3faef;
+  --color-surface-variant: #e4e1e6;
+  --color-secondary: #216963;
+  --color-on-secondary-container: #266d68;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container: #f0edf1;
+  --color-on-secondary-fixed: #00201e;
+  --color-on-surface-variant: #3e4947;
+  --color-tertiary-fixed-dim: #ffb598;
+  --color-on-tertiary-fixed-variant: #72361b;
+  --color-on-secondary: #ffffff;
+  --color-on-surface: #1b1b1e;
+  --color-surface: #fbf8fc;
+  --color-on-tertiary-container: #ffe5db;
+  --color-primary-fixed: #9cf2e8;
+  --color-on-secondary-fixed-variant: #00504b;
+  --color-surface-tint: #006a63;
+  --color-inverse-on-surface: #f3f0f4;
+  --color-primary: #005c55;
+  --color-secondary-container: #a8ece5;
+  --color-on-error-container: #93000a;
+  --color-on-tertiary-fixed: #370e00;
+  --color-surface-bright: #fbf8fc;
+  --color-primary-fixed-dim: #80d5cb;
+  --color-on-primary-fixed-variant: #00504a;
+  --color-surface-container-low: #f6f2f7;
+  --color-surface-dim: #dcd9dd;
+  --color-outline: #6e7977;
+  --color-primary-container: #0f766e;
+  --color-on-error: #ffffff;
+  --color-outline-variant: #bdc9c6;
+  --color-secondary-fixed-dim: #8fd3cc;
+  --color-tertiary-fixed: #ffdbce;
+  --color-inverse-surface: #303033;
+  --color-error-container: #ffdad6;
+  --color-secondary-fixed: #abefe8;
+  --color-surface-container-high: #eae7eb;
+  --color-background: #fbf8fc;
+  --color-error: #ba1a1a;
+  --color-on-primary-fixed: #00201d;
+  --color-on-tertiary: #ffffff;
+  --color-inverse-primary: #80d5cb;
+  --color-on-primary: #ffffff;
+  --color-surface-container-highest: #e4e1e6;
+  --color-tertiary: #7f4025;
+  --color-on-background: #1b1b1e;
+  --color-tertiary-container: #9c573a;
+  --color-brand: #0f766e;
+  --color-brand-hover: #115e59;
+  --color-brand-active: #134e4a;
+
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+  --radius-card: 6px;
+
+  --spacing-space-xl: 2rem;
+  --spacing-gutter-desktop: 1.5rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-margin-desktop: 2rem;
+  --spacing-space-md: 1rem;
+  --spacing-margin-tablet: 1.5rem;
+  --spacing-gutter: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-margin: 1rem;
+  --spacing-space-sm: 0.5rem;
+
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+
+  --text-headline-lg: 24px;
+  --text-headline-lg--line-height: 32px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 600;
+
+  --text-headline-md: 20px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 600;
+
+  --text-headline-sm: 16px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--letter-spacing: -0.01em;
+  --text-headline-sm--font-weight: 600;
+
+  --text-label-default: 14px;
+  --text-label-default--line-height: 20px;
+  --text-label-default--font-weight: 500;
+
+  --text-label-compact: 13px;
+  --text-label-compact--line-height: 18px;
+  --text-label-compact--letter-spacing: 0.01em;
+  --text-label-compact--font-weight: 500;
+
+  --text-body-default: 14px;
+  --text-body-default--line-height: 20px;
+  --text-body-default--font-weight: 400;
+
+  --text-body-medium: 14px;
+  --text-body-medium--line-height: 20px;
+  --text-body-medium--font-weight: 500;
+
+  --text-body-compact: 13px;
+  --text-body-compact--line-height: 18px;
+  --text-body-compact--letter-spacing: 0.005em;
+  --text-body-compact--font-weight: 400;
+
+  --text-caption: 13px;
+  --text-caption--line-height: 16px;
+  --text-caption--letter-spacing: 0.01em;
+  --text-caption--font-weight: 400;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    overscroll-behavior: none;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+    line-height: 1;
+    user-select: none;
+  }
+}

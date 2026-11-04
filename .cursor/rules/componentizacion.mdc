@@ -1,0 +1,16 @@
+---
+description: Reutilizar componentes existentes o crear nuevos; no duplicar UI
+alwaysApply: true
+---
+
+# Componentización
+
+Antes de implementar cualquier UI o funcionalidad:
+
+1. Buscar en `src/app/` si ya existe un componente, pipe, directiva o servicio equivalente.
+2. Si existe → reutilizarlo o extenderlo (inputs/outputs), sin duplicar.
+3. Si no existe → crear un componente nuevo standalone, una sola responsabilidad.
+4. No meter UI grande en páginas: extraer secciones, formularios, listas, modales y bloques repetibles.
+5. Ubicar en `shared/` o `features/<feature>/` según corresponda.
+
+Evitar: copiar-pegar entre vistas, componentes “god”, crear uno nuevo si ya hay equivalente.
