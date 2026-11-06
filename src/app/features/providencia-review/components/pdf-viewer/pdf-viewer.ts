@@ -15,10 +15,8 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
 import type { PageText } from '../../../../core/api/types';
 import * as pdfjs from 'pdfjs-dist';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// El builder no empaqueta `new URL(...)`: angular.json copia el worker a /pdfjs.
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
 
 @Component({
   selector: 'app-pdf-viewer',

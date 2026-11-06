@@ -18,10 +18,8 @@ import { formatBytes } from '../../../../core/utils/date-format';
 import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
 import { itemDisplayName, itemOrigenLabel, itemTypeLabel } from '../../models/case-files.models';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// El builder no empaqueta `new URL(...)`: angular.json copia el worker a /pdfjs.
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
 
 @Component({
   selector: 'app-case-file-viewer',
