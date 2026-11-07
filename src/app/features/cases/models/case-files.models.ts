@@ -1,10 +1,11 @@
 import type { CaseFolder, CaseFolderItem, CaseItemKind } from '../../../core/api/types';
 import { itemTipo } from '../../../core/api/case-tree';
 
-export type CaseDetailTab = 'expediente' | 'timeline' | 'ficha';
+export type CaseDetailTab = 'expediente' | 'correos' | 'timeline' | 'ficha';
 
 export const CASE_DETAIL_TABS: ReadonlyArray<{ id: CaseDetailTab; label: string }> = [
   { id: 'expediente', label: 'Expediente' },
+  { id: 'correos', label: 'Correos del proceso' },
   { id: 'timeline', label: 'Línea de tiempo' },
   { id: 'ficha', label: 'Ficha' },
 ];

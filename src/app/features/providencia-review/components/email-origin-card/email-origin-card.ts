@@ -52,7 +52,7 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
         </div>
         <div>
           <p class="text-caption text-on-surface-variant mb-0.5 mt-0">
-            Fecha y hora de radicación correo:
+            Fecha de notificación:
           </p>
           <p class="text-on-surface m-0">{{ receivedDisplay() }}</p>
         </div>

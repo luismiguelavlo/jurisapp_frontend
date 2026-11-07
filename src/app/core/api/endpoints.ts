@@ -167,6 +167,20 @@ export const documentsApi = {
     apiBlob(`${EI}/${d.connection_id}/messages/${d.message_id}/attachments/${d.attachment_id}`),
 };
 
+/** Bandeja por correo: una fila por correo con todos sus documentos. */
+export const inboxApi = {
+  /** Mismos filtros que /documents: el correo sale si alguno de sus documentos cumple. */
+  list: (filters: T.DocumentFilters = {}, cursor?: string | null, limit = 50) => {
+    const q = new URLSearchParams({ limit: String(limit) });
+    for (const [k, v] of Object.entries(filters)) {
+      if (v !== undefined && v !== null) q.set(k, String(v));
+    }
+    if (cursor) q.set('cursor', cursor);
+    return api<T.InboxMessagePage>(`/messages?${q}`);
+  },
+  get: (messageId: string) => api<T.InboxMessageDetail>(`/messages/${messageId}`),
+};
+
 export const alertsApi = {
   list: (
     params: {

@@ -165,7 +165,7 @@ export type FormFields = {
           <div class="p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1.5" id="field-fecha">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <label class="text-label-default font-medium text-on-surface">3. Fecha de la providencia</label>
+                <label class="text-label-default font-medium text-on-surface">3. Fecha de Auto Admisorio</label>
                 @if (badge('fecha_providencia'); as b) {
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium" [class]="b.cls">{{ b.text }}</span>
                 }

@@ -34,6 +34,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'bandeja/:messageId',
+        loadComponent: () =>
+          import('./features/message-detail/message-detail.page').then(
+            (m) => m.MessageDetailPage,
+          ),
+      },
+      {
         path: 'documents/:id',
         loadComponent: () =>
           import('./features/providencia-review/providencia-review.page').then(

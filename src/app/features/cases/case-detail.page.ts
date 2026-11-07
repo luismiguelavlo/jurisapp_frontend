@@ -44,6 +44,7 @@ import {
   type UploadRow,
 } from './components/case-upload-modal/case-upload-modal';
 import { CaseProfileTab } from '../case-profile/case-profile-tab';
+import { InboxMessagesTable } from '../../shared/components/inbox-messages-table/inbox-messages-table';
 import {
   CASE_DETAIL_TABS,
   FOLDER_MENU_ACTIONS,
@@ -101,6 +102,7 @@ type MoveModalState =
     AssignCaseModal,
     CaseFileViewer,
     CaseProfileTab,
+    InboxMessagesTable,
   ],
   template: `
     <div
@@ -159,6 +161,14 @@ type MoveModalState =
 
         @if (tab() === 'timeline') {
           <app-case-timeline [entries]="timelineDesc()" />
+        } @else if (tab() === 'correos') {
+          @if (c.mensajes.length === 0) {
+            <p class="m-0 text-body-default text-on-surface-variant">
+              Este proceso todavía no tiene correos asociados.
+            </p>
+          } @else {
+            <app-inbox-messages-table [items]="c.mensajes" />
+          }
         } @else if (tab() === 'ficha') {
           <app-case-profile-tab
             [caseId]="c.id"

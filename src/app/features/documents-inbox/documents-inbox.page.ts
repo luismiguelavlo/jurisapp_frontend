@@ -9,29 +9,29 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiError } from '../../core/api/client';
-import { documentsApi } from '../../core/api/endpoints';
+import { inboxApi } from '../../core/api/endpoints';
 import { errorText } from '../../core/api/errors';
-import type { DocumentItem, ReviewStatus } from '../../core/api/types';
+import type { DocumentFilters, InboxMessage, ReviewStatus } from '../../core/api/types';
 import { MaterialIcon } from '../../shared/components/material-icon/material-icon';
 import { SegmentedFilter } from '../../shared/components/segmented-filter/segmented-filter';
-import { DocumentsTable } from './components/documents-table/documents-table';
+import { InboxMessagesTable } from '../../shared/components/inbox-messages-table/inbox-messages-table';
 
 @Component({
   selector: 'app-documents-inbox-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DocumentsTable, MaterialIcon, RouterLink, SegmentedFilter],
+  imports: [InboxMessagesTable, MaterialIcon, RouterLink, SegmentedFilter],
   template: `
     <div class="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-5">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div class="flex flex-col gap-1">
           <h1 class="m-0 text-headline-lg text-on-surface">
-            {{ onlyUnclassified() ? 'Sin clasificar' : 'Bandeja de providencias' }}
+            {{ onlyUnclassified() ? 'Sin clasificar' : 'Bandeja de correos electrónicos' }}
           </h1>
           <p class="m-0 text-body-default text-on-surface-variant">
             @if (onlyUnclassified()) {
-              Providencias leídas que todavía no tienen un proceso asociado.
+              Correos con providencias que todavía no tienen un proceso asociado.
             } @else {
-              Lo que llegó de los juzgados. Abre una providencia para confirmar sus datos.
+              Lo que llegó de los juzgados, un correo por fila. Ábrelo para confirmar los datos de cada providencia.
             }
           </p>
         </div>
@@ -44,7 +44,7 @@ import { DocumentsTable } from './components/documents-table/documents-table';
       </div>
 
       @if (loading()) {
-        <p class="text-body-default text-on-surface-variant">Cargando providencias…</p>
+        <p class="text-body-default text-on-surface-variant">Cargando correos…</p>
       } @else if (error()) {
         <div class="p-space-md rounded-lg bg-[#FEF2F2] text-[#991B1B] flex items-center gap-2">
           <app-material-icon name="error" [size]="18" />
@@ -73,14 +73,14 @@ import { DocumentsTable } from './components/documents-table/documents-table';
               Conectar un buzón
             </a>
           } @else {
-            <p class="m-0 text-headline-sm text-on-surface">No hay providencias en esta vista</p>
+            <p class="m-0 text-headline-sm text-on-surface">No hay correos en esta vista</p>
             <p class="m-0 text-body-default text-on-surface-variant">
               Prueba con otro filtro de revisión.
             </p>
           }
         </div>
       } @else {
-        <app-documents-table
+        <app-inbox-messages-table
           [items]="items()"
           [nextCursor]="nextCursor()"
           [loadingMore]="loadingMore()"
@@ -104,7 +104,7 @@ export class DocumentsInboxPage implements OnInit {
   readonly loading = signal(true);
   readonly loadingMore = signal(false);
   readonly error = signal<string | null>(null);
-  readonly items = signal<DocumentItem[]>([]);
+  readonly items = signal<InboxMessage[]>([]);
   readonly nextCursor = signal<string | null>(null);
   readonly reviewFilter = signal<ReviewStatus | 'all'>('all');
   readonly onlyUnclassified = signal(false);
@@ -121,26 +121,26 @@ export class DocumentsInboxPage implements OnInit {
     void this.reload();
   }
 
+  private queryFilters(): DocumentFilters {
+    const review = this.onlyUnclassified() ? 'unreviewed' : this.reviewFilter();
+    return review === 'all'
+      ? { document_status: 'extracted' }
+      : { document_status: 'extracted', review_status: review };
+  }
+
+  /** "Sin clasificar": correos cuyo caso aún no existe. */
+  private visible(items: InboxMessage[]): InboxMessage[] {
+    return this.onlyUnclassified() ? items.filter((m) => m.caso.case_id == null) : items;
+  }
+
   async reload(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     this.nextCursor.set(null);
     try {
-      const filter =
-        this.reviewFilter() === 'all'
-          ? { document_status: 'extracted' as const }
-          : {
-              document_status: 'extracted' as const,
-              review_status: this.reviewFilter() as ReviewStatus,
-            };
-      const page = await documentsApi.list(
-        this.onlyUnclassified() ? { ...filter, review_status: 'unreviewed' } : filter,
-      );
-      const items = this.onlyUnclassified()
-        ? page.items.filter((d) => d.case_id == null)
-        : page.items;
-      this.items.set(items);
-      this.nextCursor.set(this.onlyUnclassified() ? null : page.next_cursor);
+      const page = await inboxApi.list(this.queryFilters());
+      this.items.set(this.visible(page.items));
+      this.nextCursor.set(page.next_cursor);
     } catch (e) {
       this.error.set(errorText(e instanceof ApiError ? e.code : null));
       this.items.set([]);
@@ -151,13 +151,11 @@ export class DocumentsInboxPage implements OnInit {
 
   async loadMore(): Promise<void> {
     const cursor = this.nextCursor();
-    if (!cursor || this.loadingMore() || this.onlyUnclassified()) return;
+    if (!cursor || this.loadingMore()) return;
     this.loadingMore.set(true);
     try {
-      const filter =
-        this.reviewFilter() === 'all' ? {} : { review_status: this.reviewFilter() as ReviewStatus };
-      const page = await documentsApi.list(filter, cursor);
-      this.items.update((prev) => [...prev, ...page.items]);
+      const page = await inboxApi.list(this.queryFilters(), cursor);
+      this.items.update((prev) => [...prev, ...this.visible(page.items)]);
       this.nextCursor.set(page.next_cursor);
     } catch (e) {
       if (e instanceof ApiError && e.code === 'invalid_cursor') {

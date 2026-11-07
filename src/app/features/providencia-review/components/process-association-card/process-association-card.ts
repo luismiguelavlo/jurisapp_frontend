@@ -68,7 +68,8 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
               @for (item of timeline(); track item.attachment_id) {
                 <a
                   class="relative block no-underline text-inherit"
-                  [routerLink]="['/documents', item.attachment_id]"
+                  [routerLink]="['/bandeja', item.message_id]"
+                  [queryParams]="{ doc: item.attachment_id }"
                 >
                   <div
                     class="absolute -left-[27px] top-1 w-3 h-3 rounded-full"

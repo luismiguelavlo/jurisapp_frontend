@@ -23,7 +23,7 @@ const NAV: NavGroup[] = [
   {
     label: 'Trabajo diario',
     items: [
-      { link: '/documents', label: 'Bandeja de providencias', icon: 'move_to_inbox' },
+      { link: '/documents', label: 'Bandeja de correos electrónicos', icon: 'move_to_inbox' },
       { link: '/cases', label: 'Procesos', icon: 'folder_managed', exact: false },
       { link: '/cases/sin-clasificar', label: 'Sin clasificar', child: true, badge: 'unassigned' },
     ],

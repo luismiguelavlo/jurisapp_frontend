@@ -43,14 +43,14 @@ export type ProcessesEmptyKind = 'no-results' | 'empty';
         </h3>
         <p class="text-body-default text-on-surface-variant max-w-sm mb-6 m-0">
           Cada radicado nuevo que llegue por correo abre aquí su expediente. Empieza revisando
-          la bandeja de providencias.
+          la bandeja de correos electrónicos.
         </p>
         <a
           routerLink="/documents"
           class="h-9 px-4 rounded-[4px] bg-primary hover:bg-brand-hover text-on-primary text-label-compact font-medium transition-colors inline-flex items-center gap-2 no-underline"
         >
           <app-material-icon name="move_to_inbox" [size]="16" />
-          <span>Ir a bandeja de providencias</span>
+          <span>Ir a bandeja de correos electrónicos</span>
         </a>
       }
     </div>

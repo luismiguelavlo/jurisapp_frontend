@@ -13,6 +13,7 @@ import {
   formatBogotaDateTime,
   remainingLabel,
 } from '../../../../core/utils/date-format';
+import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
 
 /**
  * Línea de tiempo del proceso: una entrada por providencia notificada, con su término
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-case-timeline',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, MaterialIcon],
   template: `
     <section class="bg-surface-container-lowest rounded-xl shadow-sm px-5 sm:px-8 py-6 flex flex-col gap-4">
       <header class="flex flex-col gap-1">
@@ -41,7 +42,8 @@ import {
               <a
                 class="grid grid-cols-1 sm:grid-cols-[120px_minmax(0,1fr)_auto] gap-x-4 gap-y-1 py-3 pl-4 pr-2 rounded-r-[4px] no-underline text-inherit hover:bg-surface-container-low"
                 [class]="responseStatusRail(item.respuesta_estado)"
-                [routerLink]="['/documents', item.attachment_id]"
+                [routerLink]="['/bandeja', item.message_id]"
+                [queryParams]="{ doc: item.attachment_id }"
               >
                 <div class="flex flex-col">
                   <time class="text-body-default font-semibold text-on-surface">{{
@@ -60,7 +62,7 @@ import {
                     <span class="text-caption text-on-surface-variant">{{ terminoTexto(item) }}</span>
                   }
                 </div>
-                <div class="flex flex-col sm:items-end">
+                <div class="flex flex-col sm:items-end gap-0.5">
                   <span class="text-body-compact" [class]="responseStatusInk(item.respuesta_estado)">{{
                     responseStatusLabel(item.respuesta_estado, item.a_tiempo)
                   }}</span>
@@ -69,6 +71,10 @@ import {
                       remainingLabel(item.vence_at)
                     }}</span>
                   }
+                  <span class="inline-flex items-center gap-1 text-caption text-primary">
+                    <app-material-icon name="mail" [size]="13" />
+                    Ver correo
+                  </span>
                 </div>
               </a>
             </li>

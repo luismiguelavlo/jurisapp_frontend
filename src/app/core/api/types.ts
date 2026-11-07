@@ -197,6 +197,8 @@ export interface CasePage {
 
 export interface TimelineEntry extends ResponseFields {
   attachment_id: string;
+  /** Correo que trajo el documento → GET /messages/{message_id}. */
+  message_id: string;
   filename: string;
   clase: string | null;
   subtipo: string | null;
@@ -214,6 +216,8 @@ export interface TimelineEntry extends ResponseFields {
 
 export interface CaseDetail extends CaseSummary {
   timeline: TimelineEntry[];
+  /** Todos los correos del radicado, el más reciente primero. */
+  mensajes: InboxMessage[];
 }
 
 /** GET /users — emails de uploaded_by / deleted_by / assigned_by. */
@@ -822,4 +826,57 @@ export interface EntityDetection {
   /** true = hay nombres configurados y la detección no se usa. */
   configurados: boolean;
   detectada: (EntidadDetectada & { nombre_normalizado: string }) | null;
+}
+
+// —— Bandeja por correo (GET /messages) ——
+
+/** Caso del correo. Todo null (y radicado_conflicto false) = correo sin clasificar. */
+export interface InboxMessageCase {
+  case_id: string | null;
+  radicado: string | null;
+  radicado_source: RadicadoSource | null;
+  /** true → algún documento trae un radicado distinto al del correo. */
+  radicado_conflicto: boolean;
+}
+
+export type InboxDocumentStatus = Exclude<DocumentStatus, 'not_requested'>;
+
+/** Resumen de cada documento dentro de la fila del correo. */
+export interface InboxDocumentSummary {
+  attachment_id: string;
+  /** Texto no confiable: solo interpolación (escapada). */
+  filename: string;
+  document_status: InboxDocumentStatus;
+  review_status: ReviewStatus;
+  clase_providencia: string | null;
+  vence_at: string | null;
+  respuesta_estado: ResponseStatus;
+}
+
+/** Una fila de la bandeja = un correo. */
+export interface InboxMessage {
+  message_id: string;
+  connection_id: string;
+  correo: MessageOrigin;
+  caso: InboxMessageCase;
+  /** 0 solo en los correos del caso (sin PDF). */
+  documentos_count: number;
+  /** Agregados: el peor estado entre sus documentos. null si documentos_count === 0. */
+  document_status: InboxDocumentStatus | null;
+  review_status: ReviewStatus | null;
+  respuesta_estado: ResponseStatus | null;
+  /** Menor vence_at de los documentos pendientes de respuesta. */
+  proximo_vencimiento: string | null;
+  sugerido_ia: boolean;
+  documentos: InboxDocumentSummary[];
+}
+
+export interface InboxMessagePage {
+  items: InboxMessage[];
+  next_cursor: string | null;
+}
+
+export interface InboxMessageDetail extends InboxMessage {
+  /** Mismo orden que `documentos`; cada uno es el objeto de GET /documents/{id}. */
+  documentos_detalle: DocumentDetail[];
 }

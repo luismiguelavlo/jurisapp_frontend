@@ -3,6 +3,7 @@ import type {
   Clase,
   Confianza,
   DocumentStatus,
+  RadicadoSource,
   ResponseStatus,
   ReviewStatus,
   Subtipo,
@@ -11,7 +12,7 @@ import type {
 export const FIELD_LABELS: Record<string, string> = {
   radicado: 'Radicado judicial',
   tipo_providencia: 'Tipo de providencia',
-  fecha_providencia: 'Fecha de la providencia',
+  fecha_providencia: 'Fecha de Auto Admisorio',
   juzgado: 'Despacho judicial',
   correo_juzgado: 'Correo del juzgado',
   termino_contestar: 'Término para contestar',
@@ -205,3 +206,33 @@ export const AUTO_SUBTIPOS: Subtipo[] = [
 ];
 
 export const SENTENCIA_SUBTIPOS: Subtipo[] = ['primera_instancia', 'segunda_instancia'];
+
+/** Estado de revisión agregado de un correo (peor entre sus documentos). */
+export function messageReviewLabel(s: ReviewStatus): string {
+  switch (s) {
+    case 'unreviewed':
+      return 'Por revisar';
+    case 'corrected':
+      return 'Corregido';
+    default:
+      return 'Revisado';
+  }
+}
+
+/** De dónde salió el radicado del correo. */
+export function radicadoSourceLabel(s: RadicadoSource | null): string {
+  switch (s) {
+    case 'pdf_revisado':
+      return 'un documento revisado';
+    case 'pdf':
+      return 'un documento';
+    case 'asunto':
+      return 'el asunto';
+    case 'cuerpo':
+      return 'el cuerpo del correo';
+    case 'manual':
+      return 'una asignación manual';
+    default:
+      return '—';
+  }
+}
