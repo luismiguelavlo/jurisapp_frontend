@@ -7,49 +7,40 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiError } from '../../core/api/client';
 import { documentsApi } from '../../core/api/endpoints';
 import { errorText } from '../../core/api/errors';
 import type { DocumentItem, ReviewStatus } from '../../core/api/types';
 import { MaterialIcon } from '../../shared/components/material-icon/material-icon';
+import { SegmentedFilter } from '../../shared/components/segmented-filter/segmented-filter';
 import { DocumentsTable } from './components/documents-table/documents-table';
 
 @Component({
   selector: 'app-documents-inbox-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DocumentsTable, MaterialIcon],
+  imports: [DocumentsTable, MaterialIcon, RouterLink, SegmentedFilter],
   template: `
-    <div class="max-w-[1120px] mx-auto px-margin-tablet lg:px-margin-desktop py-space-md flex flex-col gap-space-md">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-space-sm">
-        <div>
-          <h1 class="text-headline-lg text-on-surface font-semibold tracking-tight m-0">
+    <div class="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-5">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div class="flex flex-col gap-1">
+          <h1 class="m-0 text-headline-lg text-on-surface">
             {{ onlyUnclassified() ? 'Sin clasificar' : 'Bandeja de providencias' }}
           </h1>
-          <p class="text-body-default text-on-surface-variant mt-space-xs mb-0">
+          <p class="m-0 text-body-default text-on-surface-variant">
             @if (onlyUnclassified()) {
-              Providencias extraídas sin radicado / caso asociado.
+              Providencias leídas que todavía no tienen un proceso asociado.
             } @else {
-              Abra una fila para revisar la extracción y confirmar datos.
+              Lo que llegó de los juzgados. Abre una providencia para confirmar sus datos.
             }
           </p>
         </div>
-        <div class="flex items-center gap-1 bg-surface-container-low p-0.5 rounded-[6px]">
-          @for (f of filters; track f.value) {
-            <button
-              type="button"
-              class="px-2.5 py-1 rounded text-caption font-medium border-0 cursor-pointer transition-all"
-              [class]="
-                reviewFilter() === f.value
-                  ? 'bg-surface-container-lowest text-on-surface shadow-sm'
-                  : 'bg-transparent text-on-surface-variant hover:text-on-surface'
-              "
-              (click)="setFilter(f.value)"
-            >
-              {{ f.label }}
-            </button>
-          }
-        </div>
+        <app-segmented-filter
+          label="Estado de revisión"
+          [options]="filters"
+          [value]="reviewFilter()"
+          (valueChange)="setFilter($event)"
+        />
       </div>
 
       @if (loading()) {
@@ -67,14 +58,26 @@ import { DocumentsTable } from './components/documents-table/documents-table';
           </button>
         </div>
       } @else if (items().length === 0) {
-        <div
-          class="bg-surface-container-lowest rounded-xl p-space-xl text-center text-on-surface-variant"
-        >
-          <app-material-icon name="inbox" [size]="32" className="text-outline mb-2" />
-          <p class="m-0 text-body-default">
-            Aún no hay providencias. Sincronice un buzón en
-            <strong class="text-on-surface">Conexiones de correo</strong>.
-          </p>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm px-6 py-10 flex flex-col items-start gap-3">
+          @if (reviewFilter() === 'all' && !onlyUnclassified()) {
+            <p class="m-0 text-headline-sm text-on-surface">Aún no han llegado providencias</p>
+            <p class="m-0 text-body-default text-on-surface-variant max-w-[36rem]">
+              Conecta el buzón donde los juzgados notifican a tu entidad y aquí aparecerá cada auto
+              y fallo con su término.
+            </p>
+            <a
+              routerLink="/conexiones"
+              class="mt-1 inline-flex items-center gap-1.5 h-9 px-4 rounded-[4px] bg-primary text-on-primary text-label-default no-underline hover:bg-brand-hover"
+            >
+              <app-material-icon name="alternate_email" [size]="16" />
+              Conectar un buzón
+            </a>
+          } @else {
+            <p class="m-0 text-headline-sm text-on-surface">No hay providencias en esta vista</p>
+            <p class="m-0 text-body-default text-on-surface-variant">
+              Prueba con otro filtro de revisión.
+            </p>
+          }
         </div>
       } @else {
         <app-documents-table

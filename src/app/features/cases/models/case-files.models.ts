@@ -1,7 +1,27 @@
 import type { CaseFolder, CaseFolderItem, CaseItemKind } from '../../../core/api/types';
 import { itemTipo } from '../../../core/api/case-tree';
 
-export type CaseDetailTab = 'expediente' | 'timeline';
+export type CaseDetailTab = 'expediente' | 'timeline' | 'ficha';
+
+export const CASE_DETAIL_TABS: ReadonlyArray<{ id: CaseDetailTab; label: string }> = [
+  { id: 'expediente', label: 'Expediente' },
+  { id: 'timeline', label: 'Línea de tiempo' },
+  { id: 'ficha', label: 'Ficha' },
+];
+
+/** Busca el item del expediente que corresponde a un adjunto de correo. */
+export function findItemByAttachment(
+  folders: CaseFolder[],
+  attachmentId: string,
+): CaseFolderItem | null {
+  for (const folder of folders) {
+    const hit = folder.items.find((i) => i.attachment_id === attachmentId);
+    if (hit) return hit;
+    const nested = findItemByAttachment(folder.children, attachmentId);
+    if (nested) return nested;
+  }
+  return null;
+}
 
 export type FolderMenuActionId =
   | 'new-subfolder'
@@ -76,15 +96,15 @@ export function itemOrigenLabel(kind: CaseItemKind): string {
 export function radicadoSourceLabel(source: string | null | undefined): string {
   switch (source) {
     case 'pdf_revisado':
-      return 'PDF revisado';
+      return 'el PDF (revisado)';
     case 'pdf':
-      return 'PDF';
+      return 'el PDF';
     case 'asunto':
-      return 'asunto';
+      return 'el asunto del correo';
     case 'cuerpo':
-      return 'cuerpo';
+      return 'el cuerpo del correo';
     case 'manual':
-      return 'asignación manual';
+      return 'una asignación manual';
     default:
       return '—';
   }

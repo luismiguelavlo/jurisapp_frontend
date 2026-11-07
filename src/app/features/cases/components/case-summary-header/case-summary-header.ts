@@ -1,130 +1,105 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
-import {
-  caseStatusLabel,
-  caseStatusTone,
-} from '../../../../core/api/document-labels';
+import { caseStatusLabel, caseStatusTone } from '../../../../core/api/document-labels';
 import type { CaseDetail } from '../../../../core/api/types';
 import {
   formatBogotaDateTime,
   formatBytes,
-  formatRadicado,
   remainingLabel,
 } from '../../../../core/utils/date-format';
+import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
+import { RadicadoMark } from '../../../../shared/components/radicado-mark/radicado-mark';
 
+/**
+ * Carátula del expediente: radicado, despacho, estado y los cuatro datos
+ * que se miran a diario (accionante, vencimiento, respuestas, contenido).
+ */
 @Component({
   selector: 'app-case-summary-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialIcon],
+  imports: [MaterialIcon, RadicadoMark],
   template: `
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <div
-        class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between gap-4"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 mb-1 flex-wrap">
-              <button
-                type="button"
-                class="font-caption text-caption text-on-surface-variant hover:text-primary border-0 bg-transparent cursor-pointer p-0 inline-flex items-center gap-1"
-                (click)="back.emit()"
-              >
-                <app-material-icon name="arrow_back" [size]="14" />
-                Procesos
-              </button>
-              @if (juzgado()) {
-                <span class="font-caption text-caption text-on-surface-variant">•</span>
-                <span class="font-caption text-caption text-primary font-medium">{{ juzgado() }}</span>
-              }
-            </div>
-            <h1 class="font-headline-md text-headline-md text-on-surface font-mono m-0 break-all">
-              {{ formatRadicado(caso().radicado) }}
+    @let c = caso();
+    <section class="bg-surface-container-lowest rounded-xl shadow-sm">
+      <div class="px-5 pt-4 pb-5 flex flex-col gap-3">
+        <button
+          type="button"
+          class="self-start text-caption text-on-surface-variant hover:text-primary border-0 bg-transparent cursor-pointer p-0 inline-flex items-center gap-1"
+          (click)="back.emit()"
+        >
+          <app-material-icon name="arrow_back" [size]="14" />
+          Procesos
+        </button>
+
+        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div class="min-w-0 flex flex-col gap-1.5">
+            <h1 class="m-0 font-sans">
+              <app-radicado-mark [value]="c.radicado" size="xl" />
             </h1>
-            <p class="font-body-default text-body-default text-on-surface-variant mt-1 m-0">
-              {{ caso().providencias }} providencia{{ caso().providencias === 1 ? '' : 's' }}
-              · {{ caso().mensajes_count }} correo{{ caso().mensajes_count === 1 ? '' : 's' }}
-              @if (accionante()) {
-                · Accionante: {{ accionante() }}
-              }
-              @if (caso().proximo_vencimiento) {
-                · Próximo vencimiento {{ formatBogotaDateTime(caso().proximo_vencimiento) }}
-                @if (remainingLabel(caso().proximo_vencimiento); as rem) {
-                  ({{ rem }})
-                }
-              }
-            </p>
+            @if (juzgado()) {
+              <p class="m-0 text-body-default text-on-surface">{{ juzgado() }}</p>
+            }
           </div>
           <span
-            class="px-2.5 py-1 rounded-lg font-label-compact text-label-compact shrink-0"
-            [class]="caseStatusTone(caso().estado)"
+            class="px-2.5 py-1 rounded-full text-label-compact shrink-0"
+            [class]="caseStatusTone(c.estado)"
           >
-            {{ caseStatusLabel(caso().estado) }}
-            @if (remainingLabel(caso().proximo_vencimiento); as rem) {
-              ({{ rem }})
-            }
+            {{ caseStatusLabel(c.estado) }}
           </span>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          <div class="bg-surface-container-low p-2.5 rounded-lg">
-            <span class="font-caption text-caption text-on-surface-variant block">Documentos</span>
-            <span class="font-headline-sm text-headline-sm text-on-surface"
-              >{{ itemCount() }} archivo{{ itemCount() === 1 ? '' : 's' }}</span
-            >
-          </div>
-          <div class="bg-surface-container-low p-2.5 rounded-lg">
-            <span class="font-caption text-caption text-on-surface-variant block">Estructura</span>
-            <span class="font-headline-sm text-headline-sm text-on-surface"
-              >{{ folderCount() }} carpeta{{ folderCount() === 1 ? '' : 's' }}</span
-            >
-          </div>
-          <div class="bg-surface-container-low p-2.5 rounded-lg">
-            <span class="font-caption text-caption text-on-surface-variant block">Último aporte</span>
-            <span class="font-headline-sm text-headline-sm text-on-surface">{{
-              lastAporteLabel()
-            }}</span>
-          </div>
-          <div class="bg-surface-container-low p-2.5 rounded-lg">
-            <span class="font-caption text-caption text-on-surface-variant block">Almacenamiento</span>
-            <span class="font-headline-sm text-headline-sm text-on-surface">{{
-              formatBytes(sizeBytes())
-            }}</span>
-          </div>
         </div>
       </div>
 
-      <div
-        class="lg:col-span-4 bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between"
+      <dl
+        class="m-0 grid grid-cols-2 lg:grid-cols-4 border-t border-outline-variant/60 divide-outline-variant/60 lg:divide-x [&>div]:px-5 [&>div]:py-3.5"
       >
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <span class="font-label-default text-label-default text-on-surface"
-              >Providencias respondidas</span
-            >
-            <span class="font-label-compact text-label-compact text-primary-container">{{
-              respondedLabel()
-            }}</span>
-          </div>
-          @if (respondedPct() != null) {
-            <div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden mb-4">
-              <div
-                class="bg-primary-container h-full rounded-full"
-                [style.width.%]="respondedPct()"
-              ></div>
-            </div>
-          }
-          <p class="font-caption text-caption text-on-surface-variant leading-relaxed m-0">
-            @if (caso().proximo_vencimiento) {
-              Próximo vencimiento:
-              {{ formatBogotaDateTime(caso().proximo_vencimiento) }}
-              @if (remainingLabel(caso().proximo_vencimiento); as rem) {
-                ({{ rem }}).
+        <div class="min-w-0">
+          <dt class="text-caption text-on-surface-variant">Accionante</dt>
+          <dd class="m-0 mt-1 text-body-default text-on-surface font-medium truncate">
+            {{ accionante() || 'Sin identificar' }}
+          </dd>
+        </div>
+        <div class="min-w-0">
+          <dt class="text-caption text-on-surface-variant">Próximo vencimiento</dt>
+          <dd class="m-0 mt-1 text-body-default">
+            @if (c.proximo_vencimiento) {
+              <time class="text-on-surface font-medium">{{
+                formatBogotaDateTime(c.proximo_vencimiento)
+              }}</time>
+              @if (remainingLabel(c.proximo_vencimiento); as rem) {
+                <span class="block text-caption" [class]="remainingTone()">{{ rem }}</span>
               }
             } @else {
-              Sin término de vencimiento registrado en este expediente.
+              <span class="text-on-surface-variant">Sin término</span>
             }
-          </p>
+          </dd>
         </div>
-      </div>
+        <div class="min-w-0">
+          <dt class="text-caption text-on-surface-variant">Respuestas</dt>
+          <dd class="m-0 mt-1 text-body-default text-on-surface">
+            @if (responded(); as r) {
+              <span class="font-medium tabular-nums">{{ r.ok }} de {{ r.total }}</span>
+              <span class="text-on-surface-variant"> con término</span>
+              <span class="mt-1.5 block h-1 rounded-full bg-surface-container overflow-hidden">
+                <span class="block h-full bg-primary" [style.width.%]="r.pct"></span>
+              </span>
+            } @else {
+              <span class="text-on-surface-variant">Ninguna providencia exige respuesta</span>
+            }
+          </dd>
+        </div>
+        <div class="min-w-0">
+          <dt class="text-caption text-on-surface-variant">Expediente</dt>
+          <dd class="m-0 mt-1 text-body-default text-on-surface" [attr.title]="formatBytes(sizeBytes())">
+            <span class="tabular-nums">{{ itemCount() }}</span>
+            archivo{{ itemCount() === 1 ? '' : 's' }} en
+            <span class="tabular-nums">{{ folderCount() }}</span>
+            carpeta{{ folderCount() === 1 ? '' : 's' }}
+            <span class="block text-caption text-on-surface-variant"
+              >{{ c.mensajes_count }} correo{{ c.mensajes_count === 1 ? '' : 's' }}, último aporte
+              {{ lastAporteLabel() }}</span
+            >
+          </dd>
+        </div>
+      </dl>
     </section>
   `,
 })
@@ -137,7 +112,6 @@ export class CaseSummaryHeader {
   readonly accionante = input<string | null>(null);
   readonly back = output<void>();
 
-  readonly formatRadicado = formatRadicado;
   readonly formatBogotaDateTime = formatBogotaDateTime;
   readonly formatBytes = formatBytes;
   readonly remainingLabel = remainingLabel;
@@ -146,8 +120,18 @@ export class CaseSummaryHeader {
 
   readonly lastAporteLabel = computed(() => {
     const iso = this.lastCreatedAt();
-    if (!iso) return '—';
-    return formatBogotaDateTime(iso);
+    return iso ? formatBogotaDateTime(iso) : 'sin fecha';
+  });
+
+  readonly remainingTone = computed(() => {
+    switch (this.caso().estado) {
+      case 'vencido':
+        return 'text-error font-medium';
+      case 'por_vencer':
+        return 'text-tertiary font-medium';
+      default:
+        return 'text-on-surface-variant';
+    }
   });
 
   readonly juzgado = computed(() => {
@@ -159,20 +143,10 @@ export class CaseSummaryHeader {
     return null;
   });
 
-  readonly respondedPct = computed(() => {
-    const t = this.caso().timeline;
-    const withTerm = t.filter((e) => e.respuesta_estado !== 'no_requiere');
+  readonly responded = computed(() => {
+    const withTerm = this.caso().timeline.filter((e) => e.respuesta_estado !== 'no_requiere');
     if (withTerm.length === 0) return null;
     const ok = withTerm.filter((e) => e.respuesta_estado === 'respondido').length;
-    return Math.round((ok / withTerm.length) * 100);
-  });
-
-  readonly respondedLabel = computed(() => {
-    const pct = this.respondedPct();
-    if (pct == null) return '—';
-    const t = this.caso().timeline;
-    const withTerm = t.filter((e) => e.respuesta_estado !== 'no_requiere').length;
-    const ok = t.filter((e) => e.respuesta_estado === 'respondido').length;
-    return `${ok}/${withTerm} · ${pct}%`;
+    return { ok, total: withTerm.length, pct: Math.round((ok / withTerm.length) * 100) };
   });
 }

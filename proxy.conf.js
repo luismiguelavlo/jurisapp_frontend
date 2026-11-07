@@ -17,6 +17,7 @@ const API_PREFIXES = [
   '/party-identifiers',
   '/dashboard',
   '/alerts',
+  '/tenant',
   '/health',
 ];
 

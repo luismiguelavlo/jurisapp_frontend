@@ -1,64 +1,82 @@
 @import 'tailwindcss';
 
+/* Sin modo oscuro: ningún elemento recibe .dark, así las clases dark: quedan inertes (y no siguen al SO). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-on-primary-container: #a3faef;
-  --color-surface-variant: #e4e1e6;
-  --color-secondary: #216963;
-  --color-on-secondary-container: #266d68;
+  /* Papel y hojas (fríos: papel bond, no crema) */
+  --color-background: #f3f4f1;
+  --color-surface: #f3f4f1;
+  --color-surface-bright: #ffffff;
+  --color-surface-dim: #d9dcd3;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container: #f0edf1;
-  --color-on-secondary-fixed: #00201e;
-  --color-on-surface-variant: #3e4947;
-  --color-tertiary-fixed-dim: #ffb598;
-  --color-on-tertiary-fixed-variant: #72361b;
-  --color-on-secondary: #ffffff;
-  --color-on-surface: #1b1b1e;
-  --color-surface: #fbf8fc;
-  --color-on-tertiary-container: #ffe5db;
-  --color-primary-fixed: #9cf2e8;
-  --color-on-secondary-fixed-variant: #00504b;
-  --color-surface-tint: #006a63;
-  --color-inverse-on-surface: #f3f0f4;
-  --color-primary: #005c55;
-  --color-secondary-container: #a8ece5;
-  --color-on-error-container: #93000a;
-  --color-on-tertiary-fixed: #370e00;
-  --color-surface-bright: #fbf8fc;
-  --color-primary-fixed-dim: #80d5cb;
-  --color-on-primary-fixed-variant: #00504a;
-  --color-surface-container-low: #f6f2f7;
-  --color-surface-dim: #dcd9dd;
-  --color-outline: #6e7977;
-  --color-primary-container: #0f766e;
-  --color-on-error: #ffffff;
-  --color-outline-variant: #bdc9c6;
-  --color-secondary-fixed-dim: #8fd3cc;
-  --color-tertiary-fixed: #ffdbce;
-  --color-inverse-surface: #303033;
-  --color-error-container: #ffdad6;
-  --color-secondary-fixed: #abefe8;
-  --color-surface-container-high: #eae7eb;
-  --color-background: #fbf8fc;
-  --color-error: #ba1a1a;
-  --color-on-primary-fixed: #00201d;
-  --color-on-tertiary: #ffffff;
-  --color-inverse-primary: #80d5cb;
-  --color-on-primary: #ffffff;
-  --color-surface-container-highest: #e4e1e6;
-  --color-tertiary: #7f4025;
-  --color-on-background: #1b1b1e;
-  --color-tertiary-container: #9c573a;
-  --color-brand: #0f766e;
-  --color-brand-hover: #115e59;
-  --color-brand-active: #134e4a;
+  --color-surface-container-low: #eef0eb;
+  --color-surface-container: #e7e9e3;
+  --color-surface-container-high: #dfe2da;
+  --color-surface-container-highest: #d7dad1;
+  --color-surface-variant: #e1e4dc;
 
+  /* Grafito */
+  --color-on-background: #1c1f26;
+  --color-on-surface: #1c1f26;
+  --color-on-surface-variant: #545a63;
+  --color-outline: #7a808a;
+  --color-outline-variant: #c9cdc3;
+  --color-inverse-surface: #2c3038;
+  --color-inverse-on-surface: #f3f4f1;
+
+  /* Tinta de sello */
+  --color-primary: #26327a;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #2b3a8c;
+  --color-on-primary-container: #dde1ff;
+  --color-primary-fixed: #dde1ff;
+  --color-primary-fixed-dim: #b8c0f5;
+  --color-on-primary-fixed: #0f1648;
+  --color-on-primary-fixed-variant: #26327a;
+  --color-inverse-primary: #b8c0f5;
+  --color-surface-tint: #26327a;
+
+  /* Azul pizarra (selección, chips) */
+  --color-secondary: #4d5a73;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dce2ee;
+  --color-on-secondary-container: #27324a;
+  --color-secondary-fixed: #dce2ee;
+  --color-secondary-fixed-dim: #bec6d7;
+  --color-on-secondary-fixed: #121c2e;
+  --color-on-secondary-fixed-variant: #3a465d;
+
+  /* Ámbar de plazo */
+  --color-tertiary: #8a5300;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #ffddb3;
+  --color-on-tertiary-container: #2c1700;
+  --color-tertiary-fixed: #ffddb3;
+  --color-tertiary-fixed-dim: #ffb951;
+  --color-on-tertiary-fixed: #2c1700;
+  --color-on-tertiary-fixed-variant: #6a3f00;
+
+  /* Rojo sello: solo vencido / te toca responder */
+  --color-error: #b3261e;
+  --color-on-error: #ffffff;
+  --color-error-container: #f9deda;
+  --color-on-error-container: #7a1610;
+
+  --color-brand: #26327a;
+  --color-brand-hover: #1e2866;
+  --color-brand-active: #18204f;
+
+  /* Radios por jerarquía: controles 4px, hojas 8px; rounded-full vuelve a ser pastilla. */
   --radius-DEFAULT: 0.125rem;
   --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
-  --radius-full: 0.75rem;
-  --radius-card: 6px;
+  --radius-card: 8px;
+
+  /* Hojas sobre papel: borde de 1px en vez de la sombra gris difusa. */
+  --shadow-sm: 0 0 0 1px rgb(28 31 38 / 0.08), 0 1px 0 rgb(28 31 38 / 0.04);
+  --shadow-md: 0 0 0 1px rgb(28 31 38 / 0.08), 0 4px 12px -4px rgb(28 31 38 / 0.12);
+  --shadow-xl: 0 0 0 1px rgb(28 31 38 / 0.08), 0 16px 40px -12px rgb(28 31 38 / 0.25);
 
   --spacing-space-xl: 2rem;
   --spacing-gutter-desktop: 1.5rem;
@@ -71,10 +89,13 @@
   --spacing-margin: 1rem;
   --spacing-space-sm: 0.5rem;
 
-  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Source Serif 4', Georgia, serif;
+  /* Sin monoespaciada: cifras (radicados, NIT) tabulares en la fuente de la app. */
+  --font-mono: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 
-  --text-headline-lg: 24px;
-  --text-headline-lg--line-height: 32px;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 34px;
   --text-headline-lg--letter-spacing: -0.02em;
   --text-headline-lg--font-weight: 600;
 
@@ -117,18 +138,66 @@
 }
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
+
   html,
   body {
     margin: 0;
     padding: 0;
+    min-height: 100%;
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
   }
 
   body {
     overscroll-behavior: none;
+    font-feature-settings: 'kern' 1;
   }
 
-  ::-webkit-scrollbar {
-    display: none;
+  /* Títulos de página en serif de texto; el resto de la interfaz en Public Sans. */
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-optical-sizing: auto;
+  }
+
+  /* Cifras alineadas en tablas, radicados, NIT y fechas. */
+  table,
+  time,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+  .font-mono {
+    letter-spacing: 0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-primary-fixed);
+    color: var(--color-on-primary-fixed);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-outline-variant) transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   .material-symbols-outlined {

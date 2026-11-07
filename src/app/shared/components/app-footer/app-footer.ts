@@ -5,14 +5,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer
-      class="w-full max-w-[1120px] mx-auto px-margin-desktop py-space-md flex items-center justify-between text-outline text-caption border-t border-outline-variant/20"
+      class="w-full max-w-[1120px] mx-auto px-4 md:px-8 py-5 text-caption text-on-surface-variant border-t border-outline-variant/70"
     >
-      <span>© 2025 salud-auto Inc. HIPAA &amp; SOC2 Type II Certified.</span>
-      <div class="flex items-center gap-space-md">
-        <a class="hover:text-on-surface transition-colors" href="#">Security Protocol</a>
-        <a class="hover:text-on-surface transition-colors" href="#">Status</a>
-        <a class="hover:text-on-surface transition-colors" href="#">Support</a>
-      </div>
+      © 2026 JurisApp
     </footer>
   `,
 })

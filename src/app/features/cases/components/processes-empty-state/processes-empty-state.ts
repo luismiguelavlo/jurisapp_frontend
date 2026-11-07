@@ -22,12 +22,11 @@ export type ProcessesEmptyKind = 'no-results' | 'empty';
           Ningún proceso coincide con el filtro
         </h3>
         <p class="text-body-default text-on-surface-variant max-w-md mb-6 m-0">
-          Verifica el número de radicado o ajusta el selector de estado procesal para ampliar los
-          criterios de consulta.
+          Revisa el radicado o elige otro estado del término.
         </p>
         <button
           type="button"
-          class="h-9 px-4 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface text-label-compact font-medium transition-colors flex items-center gap-2 border-0 cursor-pointer"
+          class="h-9 px-4 rounded-[4px] bg-surface-container hover:bg-surface-container-high text-on-surface text-label-compact font-medium transition-colors flex items-center gap-2 border-0 cursor-pointer"
           (click)="resetFilters.emit()"
         >
           <app-material-icon name="restart_alt" [size]="16" />
@@ -43,12 +42,12 @@ export type ProcessesEmptyKind = 'no-results' | 'empty';
           No hay procesos todavía
         </h3>
         <p class="text-body-default text-on-surface-variant max-w-sm mb-6 m-0">
-          Los procesos judiciales aparecerán aquí automáticamente una vez se sincronicen y
-          clasifiquen las providencias desde la bandeja judicial.
+          Cada radicado nuevo que llegue por correo abre aquí su expediente. Empieza revisando
+          la bandeja de providencias.
         </p>
         <a
           routerLink="/documents"
-          class="h-9 px-4 rounded-lg bg-primary-container hover:bg-primary text-on-primary text-label-compact font-medium transition-colors inline-flex items-center gap-2 no-underline"
+          class="h-9 px-4 rounded-[4px] bg-primary hover:bg-brand-hover text-on-primary text-label-compact font-medium transition-colors inline-flex items-center gap-2 no-underline"
         >
           <app-material-icon name="move_to_inbox" [size]="16" />
           <span>Ir a bandeja de providencias</span>

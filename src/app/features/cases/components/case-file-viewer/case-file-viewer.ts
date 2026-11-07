@@ -7,6 +7,7 @@ import {
   input,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import * as pdfjs from 'pdfjs-dist';
@@ -172,6 +173,8 @@ export class CaseFileViewer implements OnDestroy {
   private loadGen = 0;
 
   readonly item = input.required<CaseFolderItem>();
+  /** Página a mostrar al abrir un PDF (p. ej. la de una fuente de la ficha). */
+  readonly initialPage = input(1);
   readonly close = output<void>();
   readonly download = output<void>();
 
@@ -264,6 +267,7 @@ export class CaseFileViewer implements OnDestroy {
         this.pdfDoc = await pdfjs.getDocument({ data: data.slice(0) }).promise;
         if (gen !== this.loadGen) return;
         this.pageCount.set(this.pdfDoc.numPages);
+        this.page.set(Math.min(Math.max(1, untracked(this.initialPage)), this.pdfDoc.numPages));
         this.mode.set('pdf');
         return;
       }

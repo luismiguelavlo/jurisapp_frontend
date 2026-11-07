@@ -26,6 +26,7 @@ import {
   formatBogotaDateTime,
   normalizeRadicadoInput,
 } from '../../core/utils/date-format';
+import { DocumentAnalysisPanel } from './components/document-analysis-panel/document-analysis-panel';
 import { EmailOriginCard } from './components/email-origin-card/email-origin-card';
 import {
   ExtractedDataForm,
@@ -52,6 +53,7 @@ import { pendingFieldKeys, pendingFieldLabels } from './utils/pending-fields';
     ProcessAssociationCard,
     ReviewActionBar,
     RecordResponseModal,
+    DocumentAnalysisPanel,
   ],
   template: `
     <div class="flex flex-col w-full">
@@ -117,6 +119,14 @@ import { pendingFieldKeys, pendingFieldLabels } from './utils/pending-fields';
                 [connection]="connection()"
                 [message]="message()"
               />
+
+              @if (d.analysis; as an) {
+                <app-document-analysis-panel
+                  [analysis]="an"
+                  [caseId]="d.case_id"
+                  (openCaseProfile)="goCaseProfile($event)"
+                />
+              }
 
               @if (d.document_status === 'extracted' && form(); as f) {
                 <app-extracted-data-form
@@ -354,6 +364,10 @@ export class ProvidenciaReviewPage implements OnInit {
   goCase(): void {
     const id = this.doc()?.case_id;
     if (id) void this.router.navigate(['/cases', id]);
+  }
+
+  goCaseProfile(caseId: string): void {
+    void this.router.navigate(['/cases', caseId], { queryParams: { tab: 'ficha' } });
   }
 
   downloadPdf(): void {

@@ -91,11 +91,76 @@ export function caseStatusTone(s: CaseStatus): string {
     case 'en_termino':
       return 'bg-[#DCFCE7] text-[#15803D]';
     case 'respondido':
-      return 'bg-[#DBEAFE] text-[#1E40AF]';
+      return 'bg-primary-fixed text-primary';
     default:
       return 'bg-surface-container text-on-surface-variant';
   }
 }
+
+/** Borde lateral de la fila según el término (rojo sello, ámbar, tinta, neutro). */
+export function caseStatusRail(s: CaseStatus): string {
+  switch (s) {
+    case 'vencido':
+      return 'shadow-[inset_3px_0_0_var(--color-error)]';
+    case 'por_vencer':
+      return 'shadow-[inset_3px_0_0_#d08a1e]';
+    case 'respondido':
+      return 'shadow-[inset_3px_0_0_var(--color-primary)]';
+    case 'en_termino':
+      return 'shadow-[inset_3px_0_0_#3f8f5f]';
+    default:
+      return 'shadow-[inset_3px_0_0_var(--color-outline-variant)]';
+  }
+}
+
+/** Borde lateral según el estado de la respuesta de una providencia. */
+export function responseStatusRail(s: ResponseStatus): string {
+  switch (s) {
+    case 'vencido_sin_respuesta':
+      return 'shadow-[inset_3px_0_0_var(--color-error)]';
+    case 'pendiente':
+      return 'shadow-[inset_3px_0_0_#d08a1e]';
+    case 'respondido':
+      return 'shadow-[inset_3px_0_0_var(--color-primary)]';
+    default:
+      return 'shadow-[inset_3px_0_0_var(--color-outline-variant)]';
+  }
+}
+
+/** Color del texto del estado de la respuesta. */
+export function responseStatusInk(s: ResponseStatus): string {
+  switch (s) {
+    case 'vencido_sin_respuesta':
+      return 'text-error font-medium';
+    case 'pendiente':
+      return 'text-tertiary font-medium';
+    case 'respondido':
+      return 'text-primary';
+    default:
+      return 'text-on-surface-variant';
+  }
+}
+
+/** Color del texto de tiempo restante según el término. */
+export function caseStatusInk(s: CaseStatus): string {
+  switch (s) {
+    case 'vencido':
+      return 'text-error';
+    case 'por_vencer':
+      return 'text-tertiary';
+    default:
+      return 'text-on-surface';
+  }
+}
+
+export const CASE_STATUS_OPTIONS: ReadonlyArray<{ value: CaseStatus | 'all'; label: string }> = [
+  { value: 'all', label: 'Todos' },
+  { value: 'vencido', label: 'Vencidos' },
+  { value: 'por_vencer', label: 'Por vencer' },
+  { value: 'en_termino', label: 'En término' },
+  { value: 'respondido', label: 'Respondidos' },
+  { value: 'sin_termino', label: 'Sin término' },
+];
 
 export function claseLabel(c: Clase | null | undefined): string {
   if (!c) return '—';

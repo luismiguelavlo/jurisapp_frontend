@@ -29,7 +29,11 @@ export type ErrorCode =
   | 'invalid_responded_at'
   | 'invalid_cursor'
   | 'invalid_document_fields'
-  | 'document_not_extracted';
+  | 'document_not_extracted'
+  | 'case_profile_outdated'
+  | 'invalid_entity_name'
+  | 'entity_name_already_exists'
+  | 'entity_name_limit_reached';
 
 export interface TokenResponse {
   access_token: string;
@@ -469,6 +473,8 @@ export interface DocumentDetail extends DocumentItem {
     changed_fields: string[];
   } | null;
   respuestas: DocumentResponse[];
+  /** SPEC 21: análisis del documento; null = no analizado. */
+  analysis?: DocumentAnalysis | null;
 }
 
 export interface DocumentPage {
@@ -542,4 +548,278 @@ export interface Alert {
 export interface AlertPage {
   items: Alert[];
   next_cursor: string | null;
+}
+
+// —— Ficha del caso (SPEC 21) ——
+
+export type TipoDocumento =
+  | 'escrito_tutela'
+  | 'auto'
+  | 'sentencia'
+  | 'notificacion'
+  | 'incidente_desacato'
+  | 'impugnacion'
+  | 'contestacion'
+  | 'anexo'
+  | 'otro';
+
+export interface Fuente {
+  attachment_id: string;
+  tipo_documento: TipoDocumento;
+  /** Puede venir vacío. */
+  paginas: number[];
+}
+
+export interface Seccion<T> {
+  valor: T;
+  fuentes: Fuente[];
+  /** 'revision' = lo dejó una persona. */
+  origen: 'modelo' | 'revision';
+  nuevo_desde_revision: boolean;
+}
+
+export interface DatoContacto {
+  valor: string;
+  confianza: Confianza;
+  pagina: number;
+}
+
+export type TipoIdPersona = 'CC' | 'TI' | 'CE' | 'PA' | 'RC' | 'PPT';
+
+export interface IdentificacionPersona {
+  tipo: TipoIdPersona;
+  numero: string;
+  confianza: Confianza;
+  pagina: number;
+}
+
+export interface AccionanteFicha {
+  nombre: string | null;
+  municipio: string | null;
+  edad: number | null;
+  identificacion: IdentificacionPersona | null;
+  telefonos: DatoContacto[];
+  correo: DatoContacto | null;
+  direccion: DatoContacto | null;
+}
+
+export type CalidadAgente =
+  | 'agente_oficioso'
+  | 'apoderado'
+  | 'personero'
+  | 'defensor'
+  | 'familiar'
+  | 'otro';
+
+export interface AgenteOficioso {
+  nombre: string;
+  calidad: CalidadAgente;
+  parentesco: string | null;
+}
+
+export type Regimen = 'contributivo' | 'subsidiado' | 'especial' | 'excepcion' | 'no_afiliado';
+
+export interface Aseguradora {
+  nombre: string;
+  regimen: Regimen | null;
+}
+
+export interface MedidaFicha {
+  solicitada: boolean;
+  concedida: boolean | null;
+  descripcion: string | null;
+}
+
+export interface Diagnostico {
+  descripcion: string;
+  cie10: string | null;
+}
+
+export type TipoTecnologia =
+  | 'medicamento'
+  | 'procedimiento'
+  | 'insumo'
+  | 'dispositivo'
+  | 'consulta'
+  | 'examen'
+  | 'servicio'
+  | 'transporte'
+  | 'otro';
+
+export interface Tecnologia {
+  nombre: string;
+  tipo: TipoTecnologia;
+  presentacion: string | null;
+  cantidad: string | null;
+  posologia: string | null;
+}
+
+export type EstadoAntecedente = 'pendiente' | 'agotado' | 'negado' | 'entregado' | 'otro';
+
+export interface Antecedente {
+  /** YYYY-MM-DD */
+  fecha: string | null;
+  descripcion: string;
+  /** Nº de fórmula, recibo u orden. */
+  referencia: string | null;
+  estado: EstadoAntecedente | null;
+}
+
+export interface ReclamoPrevio {
+  entidad: string;
+  fecha: string | null;
+  numero: string | null;
+  resumen: string | null;
+}
+
+export type TipoActuacion =
+  | 'admisorio'
+  | 'medida_provisional'
+  | 'requerimiento'
+  | 'fallo_primera'
+  | 'fallo_segunda'
+  | 'requerimiento_previo_desacato'
+  | 'apertura_desacato'
+  | 'decision_desacato'
+  | 'consulta_desacato'
+  | 'cierre'
+  | 'otra';
+
+export interface Sancionado {
+  nombre: string | null;
+  cargo: string | null;
+  entidad: string | null;
+  multa_smlmv: number | null;
+  arresto_dias: number | null;
+}
+
+export type SentidoFallo = 'concede' | 'niega' | 'improcedente' | 'hecho_superado' | 'parcial';
+export type DecisionDesacato = 'sanciona' | 'se_abstiene' | 'archiva' | 'cumplimiento';
+
+export interface TerminoActuacion {
+  cantidad: number;
+  unidad: Unidad;
+  texto: string | null;
+}
+
+export interface Actuacion {
+  tipo: TipoActuacion;
+  descripcion: string | null;
+  fecha_providencia: string | null;
+  termino: TerminoActuacion | null;
+  /** Tal como aparecen: "la entidad accionada y las vinculadas". */
+  destinatarios: string[];
+  orden: string | null;
+  /** Solo fallos. */
+  sentido: SentidoFallo | null;
+  decision_desacato: DecisionDesacato | null;
+  sancionados: Sancionado[];
+  pagina: number;
+  /** La cita del modelo está literal en la página. */
+  verificada: boolean;
+}
+
+export interface ActuacionFicha {
+  actuacion: Actuacion;
+  fuente: Fuente;
+  nuevo_desde_revision: boolean;
+  /** Derivados con la entidad del tenant. null = no se puede saber. */
+  exige_respuesta_entidad: boolean | null;
+  sentido_frente_entidad: 'favorable' | 'desfavorable' | null;
+  sancion_entidad: boolean | null;
+}
+
+export type FuenteDeteccion = 'nombre_tenant' | 'dominio_buzon' | 'frecuencia';
+
+export interface EntidadDetectada {
+  nombre: string;
+  fuentes: FuenteDeteccion[];
+  casos: number;
+  total_casos: number;
+}
+
+export interface ParteFicha {
+  rol: 'accionado' | 'vinculado';
+  nombre: string;
+}
+
+export interface CaseProfile {
+  accionante: Seccion<AccionanteFicha> | null;
+  agente_oficioso: Seccion<AgenteOficioso> | null;
+  aseguradora: Seccion<Aseguradora> | null;
+  lugar_atencion: Seccion<string> | null;
+  objeto: Seccion<string> | null;
+  hechos_resumen: Seccion<string> | null;
+  derechos_invocados: Seccion<string[]> | null;
+  pretensiones: Seccion<string[]> | null;
+  tratamiento_integral_solicitado: Seccion<boolean> | null;
+  medida_provisional: Seccion<MedidaFicha> | null;
+  diagnosticos: Seccion<Diagnostico[]> | null;
+  tecnologias: Seccion<Tecnologia[]> | null;
+  antecedentes: Seccion<Antecedente[]> | null;
+  reclamos_previos: Seccion<ReclamoPrevio[]> | null;
+  pruebas_aportadas: Seccion<string[]> | null;
+  partes: ParteFicha[];
+  actuaciones: ActuacionFicha[];
+  calidad_entidad: 'accionada' | 'vinculada' | 'no_aparece' | null;
+  entidad_no_configurada: boolean;
+  entidad_detectada: EntidadDetectada | null;
+  /** Enviar como `based_on` al revisar. */
+  analisis_ids: string[];
+}
+
+export interface CaseProfileResponse {
+  ficha: CaseProfile;
+  reviewed_at: string | null;
+  /** user_id; email con /users. */
+  reviewed_by: string | null;
+}
+
+// —— Análisis por documento (en /documents/{id}) ——
+
+export interface DocumentAnalysis {
+  tipo_documento: TipoDocumento;
+  accionante: { nombre: string | null; municipio: string | null; edad: number | null } | null;
+  contacto: {
+    nombre: DatoContacto | null;
+    identificacion: IdentificacionPersona | null;
+    telefonos: DatoContacto[];
+    correo: DatoContacto | null;
+    direccion: DatoContacto | null;
+  };
+  agente_oficioso: AgenteOficioso | null;
+  partes_mencionadas: ParteFicha[];
+  aseguradora: Aseguradora | null;
+  lugar_atencion: string | null;
+  objeto: string | null;
+  hechos_resumen: string | null;
+  derechos_invocados: string[];
+  pretensiones: string[];
+  tratamiento_integral_solicitado: boolean | null;
+  medida_provisional: MedidaFicha | null;
+  diagnosticos: Diagnostico[];
+  tecnologias: Tecnologia[];
+  antecedentes: Antecedente[];
+  reclamos_previos: ReclamoPrevio[];
+  pruebas_aportadas: string[];
+  actuaciones: Actuacion[];
+  /** Dudas del modelo: páginas ilegibles, contradicciones. */
+  observaciones: string | null;
+  paginas_fuente: Record<string, number[]>;
+}
+
+// —— Entidad del tenant ——
+
+export interface EntityName {
+  id: string;
+  nombre: string;
+  nombre_normalizado: string;
+  nit: string | null;
+  created_at: string;
+}
+
+export interface EntityDetection {
+  /** true = hay nombres configurados y la detección no se usa. */
+  configurados: boolean;
+  detectada: (EntidadDetectada & { nombre_normalizado: string }) | null;
 }

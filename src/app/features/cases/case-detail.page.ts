@@ -19,6 +19,7 @@ import type {
   CaseFolder,
   CaseFolderItem,
   CaseTrash,
+  Fuente,
 } from '../../core/api/types';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -42,10 +43,13 @@ import {
   CaseUploadModal,
   type UploadRow,
 } from './components/case-upload-modal/case-upload-modal';
+import { CaseProfileTab } from '../case-profile/case-profile-tab';
 import {
+  CASE_DETAIL_TABS,
   FOLDER_MENU_ACTIONS,
   ITEM_MENU_ACTIONS,
   findFolder,
+  findItemByAttachment,
   flattenFolders,
   itemDisplayName,
   type CaseDetailTab,
@@ -96,6 +100,7 @@ type MoveModalState =
     CaseTrashDrawer,
     AssignCaseModal,
     CaseFileViewer,
+    CaseProfileTab,
   ],
   template: `
     <div
@@ -129,77 +134,68 @@ type MoveModalState =
           class="flex items-center gap-1 border-b border-outline-variant/30"
           role="tablist"
         >
-          <button
-            type="button"
-            role="tab"
-            class="px-3 py-2 font-label-default text-label-default border-0 bg-transparent cursor-pointer relative"
-            [class]="
-              tab() === 'expediente'
-                ? 'text-primary-container'
-                : 'text-on-surface-variant hover:text-on-surface'
-            "
-            [attr.aria-selected]="tab() === 'expediente'"
-            (click)="setTab('expediente')"
-          >
-            Expediente
-            @if (tab() === 'expediente') {
-              <span
-                class="absolute left-0 right-0 bottom-0 h-0.5 bg-primary-container rounded-full"
-              ></span>
-            }
-          </button>
-          <button
-            type="button"
-            role="tab"
-            class="px-3 py-2 font-label-default text-label-default border-0 bg-transparent cursor-pointer relative"
-            [class]="
-              tab() === 'timeline'
-                ? 'text-primary-container'
-                : 'text-on-surface-variant hover:text-on-surface'
-            "
-            [attr.aria-selected]="tab() === 'timeline'"
-            (click)="setTab('timeline')"
-          >
-            Línea de tiempo
-            @if (tab() === 'timeline') {
-              <span
-                class="absolute left-0 right-0 bottom-0 h-0.5 bg-primary-container rounded-full"
-              ></span>
-            }
-          </button>
+          @for (t of tabs; track t.id) {
+            <button
+              type="button"
+              role="tab"
+              class="px-3 py-2 font-label-default text-label-default border-0 bg-transparent cursor-pointer relative"
+              [class]="
+                tab() === t.id
+                  ? 'text-primary-container'
+                  : 'text-on-surface-variant hover:text-on-surface'
+              "
+              [attr.aria-selected]="tab() === t.id"
+              (click)="setTab(t.id)"
+            >
+              {{ t.label }}
+              @if (tab() === t.id) {
+                <span
+                  class="absolute left-0 right-0 bottom-0 h-0.5 bg-primary-container rounded-full"
+                ></span>
+              }
+            </button>
+          }
         </div>
 
         @if (tab() === 'timeline') {
           <app-case-timeline [entries]="timelineDesc()" />
-        } @else {
-          <app-case-files-toolbar
-            [canManage]="auth.canManage()"
-            [canUpload]="!!selectedFolderId()"
-            [query]="query()"
-            (newFolder)="openCreateFolder()"
-            (upload)="openUpload()"
-            (trash)="openTrash()"
-            (queryChange)="query.set($event)"
+        } @else if (tab() === 'ficha') {
+          <app-case-profile-tab
+            [caseId]="c.id"
+            [userEmails]="userEmails()"
+            (editingChange)="profileDirty = $event"
+            (openSource)="openSource($event)"
           />
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-w-0">
-            <app-case-folder-tree
-              [rows]="folderRows()"
-              [selectedId]="selectedFolderId()"
-              (select)="selectFolder($event)"
-              (menu)="onFolderMenu($event)"
-            />
-            <app-case-files-table
-              [folder]="selectedFolder()"
+        } @else {
+          <section class="bg-surface-container-lowest rounded-xl shadow-sm min-w-0 overflow-hidden">
+            <app-case-files-toolbar
+              [canManage]="auth.canManage()"
+              [canUpload]="!!selectedFolderId()"
               [query]="query()"
-              [userEmails]="userEmails()"
-              (openFolder)="selectFolder($event)"
-              (openItem)="openItem($event)"
-              (uploadHere)="openUpload()"
-              (reassign)="openReassign()"
-              (menu)="onItemMenu($event)"
+              (newFolder)="openCreateFolder()"
+              (upload)="openUpload()"
+              (trash)="openTrash()"
+              (queryChange)="query.set($event)"
             />
-          </div>
+            <div class="grid grid-cols-1 lg:grid-cols-[264px_minmax(0,1fr)] min-w-0">
+              <app-case-folder-tree
+                [rows]="folderRows()"
+                [selectedId]="selectedFolderId()"
+                (select)="selectFolder($event)"
+                (menu)="onFolderMenu($event)"
+              />
+              <app-case-files-table
+                [folder]="selectedFolder()"
+                [query]="query()"
+                [userEmails]="userEmails()"
+                (openFolder)="selectFolder($event)"
+                (openItem)="openItem($event)"
+                (uploadHere)="openUpload()"
+                (reassign)="openReassign()"
+                (menu)="onItemMenu($event)"
+              />
+            </div>
+          </section>
         }
       }
     </div>
@@ -289,6 +285,7 @@ type MoveModalState =
     @if (viewerItem(); as vi) {
       <app-case-file-viewer
         [item]="vi"
+        [initialPage]="viewerPage()"
         (close)="viewerItem.set(null)"
         (download)="downloadItem(vi)"
       />
@@ -339,6 +336,10 @@ export class CaseDetailPage implements OnInit {
   readonly reassignError = signal<string | null>(null);
   readonly reassignBusy = signal(false);
   readonly viewerItem = signal<CaseFolderItem | null>(null);
+  readonly viewerPage = signal(1);
+  readonly tabs = CASE_DETAIL_TABS;
+  /** Revisión de la ficha sin guardar. */
+  profileDirty = false;
   readonly accionante = signal<string | null>(null);
 
   private caseId = '';
@@ -394,7 +395,8 @@ export class CaseDetailPage implements OnInit {
     void this.loadUsers();
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
       const tab = q.get('tab');
-      if (tab === 'timeline' || tab === 'expediente') this.tab.set(tab);
+      const known = CASE_DETAIL_TABS.find((t) => t.id === tab);
+      if (known) this.tab.set(known.id);
       const folder = q.get('folder');
       if (folder) this.selectedFolderId.set(folder);
     });
@@ -404,6 +406,15 @@ export class CaseDetailPage implements OnInit {
   }
 
   setTab(tab: CaseDetailTab): void {
+    if (tab === this.tab()) return;
+    if (
+      this.tab() === 'ficha' &&
+      this.profileDirty &&
+      !confirm('Tienes una revisión de la ficha sin guardar. Si sales se perderán los cambios.')
+    ) {
+      return;
+    }
+    this.profileDirty = false;
     this.tab.set(tab);
     void this.router.navigate([], {
       relativeTo: this.route,
@@ -683,8 +694,20 @@ export class CaseDetailPage implements OnInit {
     void this.processUploadQueue();
   }
 
-  openItem(item: CaseFolderItem): void {
+  openItem(item: CaseFolderItem, page = 1): void {
+    this.viewerPage.set(page);
     this.viewerItem.set(item);
+  }
+
+  /** Procedencia de la ficha (§3.6): abre el PDF de la fuente en su página. */
+  openSource(fuente: Fuente): void {
+    const item = findItemByAttachment(this.folders(), fuente.attachment_id);
+    if (item) {
+      this.openItem(item, fuente.paginas[0] ?? 1);
+      return;
+    }
+    // No está en el expediente (p. ej. correo movido): abrir el detalle del documento.
+    void this.router.navigate(['/documents', fuente.attachment_id]);
   }
 
   async downloadItem(item: CaseFolderItem): Promise<void> {
@@ -840,7 +863,7 @@ export class CaseDetailPage implements OnInit {
       } else if (!this.selectedFolderId() || !findFolder(files.folders, this.selectedFolderId()!)) {
         this.selectedFolderId.set(files.folders[0]?.id ?? null);
       }
-      void this.loadAccionante(detail.radicado);
+      void this.loadAccionante(id, detail.radicado);
     } catch (e) {
       this.caso.set(null);
       this.folders.set([]);
@@ -854,7 +877,18 @@ export class CaseDetailPage implements OnInit {
     }
   }
 
-  private async loadAccionante(radicado: string): Promise<void> {
+  /** Nombre del accionante: primero la ficha (SPEC 21); si no hay, la extracción de una providencia. */
+  private async loadAccionante(caseId: string, radicado: string): Promise<void> {
+    try {
+      const { ficha } = await casesApi.profile(caseId);
+      const nombre = ficha.accionante?.valor.nombre?.trim();
+      if (nombre) {
+        this.accionante.set(nombre);
+        return;
+      }
+    } catch {
+      // sin ficha: seguir con la extracción
+    }
     try {
       const page = await documentsApi.list(
         { radicado, document_status: 'extracted' },

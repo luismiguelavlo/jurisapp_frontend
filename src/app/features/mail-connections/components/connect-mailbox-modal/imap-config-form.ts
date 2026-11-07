@@ -111,7 +111,7 @@ import {
             formControlName="password"
           />
           <span class="text-[11px] text-on-surface-variant"
-            >Genera un token específico para Salud-auto desde la consola de tu correo.</span
+            >Genera un token específico para JurisApp desde la consola de tu correo.</span
           >
         </div>
       </div>

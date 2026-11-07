@@ -9,8 +9,7 @@ import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
-import { ThemeToggle } from '../../../shared/components/theme-toggle/theme-toggle';
+import { RadicadoMark } from '../../../shared/components/radicado-mark/radicado-mark';
 import { LoginCard } from './components/login-card/login-card';
 import { SecurityNotice } from './components/security-notice/security-notice';
 import type { LoginCredentials, LoginSimulatorState } from './models/login.models';
@@ -18,27 +17,40 @@ import type { LoginCredentials, LoginSimulatorState } from './models/login.model
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StatusBadge, ThemeToggle, LoginCard, SecurityNotice],
+  imports: [RadicadoMark, LoginCard, SecurityNotice],
   host: {
-    class: 'flex-1 flex items-center justify-center px-margin-desktop py-space-xl w-full',
+    class: 'flex-1 flex w-full',
   },
   template: `
     <div
-      class="flex flex-col w-full items-center justify-center min-h-[calc(100vh-140px)] px-space-md py-space-md selection:bg-secondary-container selection:text-on-secondary-fixed"
+      class="w-full min-w-0 max-w-[1120px] mx-auto px-4 md:px-8 py-10 lg:py-16 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 lg:gap-20 items-center"
     >
-      <div class="w-full max-w-[360px] mb-space-md flex items-center justify-between text-caption">
-        <app-status-badge />
-        <app-theme-toggle variant="labeled" />
+      <section class="min-w-0 flex flex-col gap-8 max-w-[34rem]">
+        <h1 class="m-0 text-[34px] leading-[40px] sm:text-[44px] sm:leading-[50px] text-on-surface">
+          Cada tutela de tu entidad, con el término de cada auto a la vista.
+        </h1>
+        <p class="m-0 text-body-default text-on-surface-variant max-w-[30rem] text-[15px] leading-6">
+          JurisApp lee los correos de los juzgados, agrupa las providencias por radicado y te dice
+          cuáles exigen respuesta y hasta cuándo.
+        </p>
+        <figure class="m-0 flex flex-col gap-3 pt-6 border-t border-outline-variant">
+          <app-radicado-mark value="11001310300120260012300" size="lg" [annotated]="true" />
+          <figcaption class="text-caption text-on-surface-variant">
+            Así se lee un radicado. Todo lo que llega con el mismo número queda en un solo
+            expediente.
+          </figcaption>
+        </figure>
+      </section>
+
+      <div class="min-w-0 order-first lg:order-none flex flex-col items-stretch gap-4 w-full max-w-[380px] justify-self-center lg:justify-self-end">
+        <app-login-card
+          [state]="uiState()"
+          [countdown]="countdown()"
+          [loading]="loading()"
+          (submitted)="onLoginSubmit($event)"
+        />
+        <app-security-notice />
       </div>
-
-      <app-login-card
-        [state]="uiState()"
-        [countdown]="countdown()"
-        [loading]="loading()"
-        (submitted)="onLoginSubmit($event)"
-      />
-
-      <app-security-notice />
     </div>
   `,
 })

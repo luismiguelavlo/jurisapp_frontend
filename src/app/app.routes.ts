@@ -81,6 +81,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'configuracion/entidad',
+        loadComponent: () =>
+          import('./features/entity-settings/entity-settings.page').then(
+            (m) => m.EntitySettingsPage,
+          ),
+      },
+      {
         path: 'providencias',
         pathMatch: 'full',
         redirectTo: 'documents',

@@ -11,7 +11,7 @@ import { PasswordField } from '../../../../../shared/components/password-field/p
     <form class="space-y-3.5" [formGroup]="form" (ngSubmit)="onSubmit()">
       <div>
         <label
-          class="block text-label-compact font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+          class="block text-label-compact font-medium text-on-surface mb-1"
           for="tenantInput"
         >
           Organización
@@ -22,16 +22,16 @@ import { PasswordField } from '../../../../../shared/components/password-field/p
           formControlName="tenant"
           autocomplete="organization"
           placeholder="clinica-san-rafael"
-          class="w-full h-9 px-3 text-body-default bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[6px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
+          class="w-full h-9 px-3 text-body-default bg-surface-container-lowest border border-outline-variant rounded-[4px] text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
         />
-        <p class="text-caption text-zinc-400 dark:text-zinc-500 mt-1">
-          Identificador único de su organización
+        <p class="text-caption text-on-surface-variant mt-1">
+          El identificador de tu entidad en JurisApp
         </p>
       </div>
 
       <div>
         <label
-          class="block text-label-compact font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+          class="block text-label-compact font-medium text-on-surface mb-1"
           for="emailInput"
         >
           Correo corporativo
@@ -42,32 +42,21 @@ import { PasswordField } from '../../../../../shared/components/password-field/p
           formControlName="email"
           autocomplete="username"
           placeholder="usuario@organizacion.com"
-          class="w-full h-9 px-3 text-body-default bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[6px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
+          class="w-full h-9 px-3 text-body-default bg-surface-container-lowest border border-outline-variant rounded-[4px] text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
         />
       </div>
 
       <div>
-        <div class="flex items-center justify-between mb-1">
-          <label
-            class="text-label-compact font-medium text-zinc-700 dark:text-zinc-300"
-            for="passwordInput"
-          >
-            Contraseña
-          </label>
-          <a
-            class="text-caption text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
-            href="#"
-          >
-            Olvidé mi contraseña
-          </a>
-        </div>
+        <label class="block text-label-compact font-medium text-on-surface mb-1" for="passwordInput">
+          Contraseña
+        </label>
         <app-password-field formControlName="password" />
       </div>
 
       <div class="pt-1">
         <button
           type="submit"
-          class="w-full h-9 rounded-[6px] bg-brand hover:bg-brand-hover active:bg-brand-active text-white text-label-default font-medium transition-colors flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 dark:focus:ring-offset-zinc-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full h-10 rounded-[4px] bg-brand hover:bg-brand-hover active:bg-brand-active text-on-primary text-label-default font-medium transition-colors flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           [disabled]="submitDisabled() || form.invalid"
         >
           <span>Iniciar sesión</span>

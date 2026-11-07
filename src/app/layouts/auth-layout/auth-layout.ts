@@ -8,7 +8,7 @@ import { AppHeader } from '../../shared/components/app-header/app-header';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, AppHeader, AppFooter],
   template: `
-    <div class="bg-surface text-on-surface min-h-screen flex flex-col justify-between">
+    <div class="bg-background text-on-surface min-h-screen flex flex-col">
       <app-header />
       <main class="flex-1 flex flex-col">
         <router-outlet />

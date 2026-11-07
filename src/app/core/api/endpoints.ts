@@ -70,6 +70,22 @@ export const casesApi = {
     api<T.DocumentResponse>(`/documents/${attachmentId}/response`, post(body)),
   voidResponse: (attachmentId: string, motivo: string) =>
     api<T.DocumentResponse>(`/documents/${attachmentId}/response/void`, post({ motivo })),
+  /** Ficha del caso (SPEC 21). Responde `no-store`: no persistir en el cliente. */
+  profile: (caseId: string) => api<T.CaseProfileResponse>(`/cases/${caseId}/ficha`),
+  /** `based_on` = exactamente el `analisis_ids` de la ficha cargada. */
+  reviewProfile: (caseId: string, ficha: T.CaseProfile) =>
+    api<T.CaseProfileResponse>(`/cases/${caseId}/ficha`, {
+      method: 'PUT',
+      body: JSON.stringify({ ficha, based_on: ficha.analisis_ids }),
+    }),
+};
+
+export const entityNamesApi = {
+  list: () => api<T.EntityName[]>('/tenant/entity-names'),
+  detection: () => api<T.EntityDetection>('/tenant/entity-names/deteccion'),
+  create: (nombre: string, nit?: string) =>
+    api<T.EntityName>('/tenant/entity-names', post(nit ? { nombre, nit } : { nombre })),
+  remove: (id: string) => api<void>(`/tenant/entity-names/${id}`, { method: 'DELETE' }),
 };
 
 export const caseFilesApi = {

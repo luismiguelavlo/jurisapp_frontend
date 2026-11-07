@@ -1,89 +1,92 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-  inject,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { UnassignedService } from '../../../core/services/unassigned.service';
+import { AppLogo } from '../../../shared/components/app-logo/app-logo';
 import { MaterialIcon } from '../../../shared/components/material-icon/material-icon';
 
+interface NavItem {
+  link: string;
+  label: string;
+  icon?: string;
+  /** Subnivel (p. ej. "Sin clasificar" bajo Procesos). */
+  child?: boolean;
+  exact?: boolean;
+  badge?: 'unassigned';
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV: NavGroup[] = [
+  {
+    label: 'Trabajo diario',
+    items: [
+      { link: '/documents', label: 'Bandeja de providencias', icon: 'move_to_inbox' },
+      { link: '/cases', label: 'Procesos', icon: 'folder_managed', exact: false },
+      { link: '/cases/sin-clasificar', label: 'Sin clasificar', child: true, badge: 'unassigned' },
+    ],
+  },
+  {
+    label: 'Configuración',
+    items: [
+      { link: '/conexiones', label: 'Conexiones de correo', icon: 'alternate_email' },
+      { link: '/configuracion/entidad', label: 'Entidad', icon: 'domain' },
+    ],
+  },
+];
+
+/** Navegación sobre papel; la sección activa se marca como la pestaña de un expediente. */
 @Component({
   selector: 'app-dashboard-sidebar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, MaterialIcon],
+  imports: [RouterLink, RouterLinkActive, MaterialIcon, AppLogo],
   template: `
     <aside
-      class="fixed left-0 top-0 h-full w-60 bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+      class="fixed left-0 top-0 h-full w-60 bg-background z-50 flex flex-col border-r border-outline-variant/70"
     >
-      <div class="flex flex-col">
-        <div class="h-14 px-margin flex items-center gap-space-xs">
-          <div
-            class="w-5 h-5 rounded-[6px] bg-primary-container flex items-center justify-center text-on-primary"
-          >
-            <app-material-icon name="balance" [size]="14" />
-          </div>
-          <span class="text-headline-sm tracking-tight text-on-surface font-semibold"
-            >salud-auto</span
-          >
-        </div>
-        <div class="px-space-xs mt-space-xs">
-          <nav class="flex flex-col gap-0.5">
-            <a
-              routerLink="/documents"
-              routerLinkActive="bg-surface-container-low text-primary-container font-medium"
-              class="flex items-center gap-space-xs px-space-xs py-space-xs rounded-[6px] text-label-default text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
-            >
-              <app-material-icon name="move_to_inbox" [size]="16" />
-              <span>Bandeja de providencias</span>
-            </a>
-
-            <div class="flex flex-col">
-              <a
-                routerLink="/cases"
-                routerLinkActive="bg-secondary-container/40 text-primary-container font-medium"
-                [routerLinkActiveOptions]="{ exact: false }"
-                class="flex items-center gap-space-xs px-space-xs py-space-xs rounded-[6px] text-label-default text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
-              >
-                <app-material-icon name="folder_managed" [size]="16" />
-                <span>Procesos</span>
-              </a>
-              <div
-                class="ml-5 pl-space-xs border-l border-outline-variant/30 flex flex-col gap-0.5 mt-0.5"
-              >
-                <a
-                  routerLink="/cases/sin-clasificar"
-                  routerLinkActive="bg-surface-container-low text-on-surface font-medium"
-                  class="flex items-center justify-between gap-2 px-space-xs py-1.5 rounded-[6px] text-body-compact text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
-                >
-                  <span>Sin clasificar</span>
-                  @if (unassigned.total() > 0) {
-                    <span
-                      class="bg-error-container text-on-error-container font-label-compact text-[11px] px-1.5 py-0.5 rounded-full leading-none"
-                      >{{ unassigned.total() }}</span
-                    >
-                  }
-                </a>
-              </div>
-            </div>
-
-            <a
-              routerLink="/conexiones"
-              routerLinkActive="bg-surface-container-low text-primary-container font-medium"
-              class="flex items-center gap-space-xs px-space-xs py-space-xs rounded-[6px] text-label-default text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
-            >
-              <app-material-icon name="alternate_email" [size]="16" />
-              <span>Conexiones de correo</span>
-            </a>
-          </nav>
-        </div>
+      <div class="h-14 px-4 flex items-center shrink-0">
+        <app-logo size="sm" />
       </div>
-      <div class="p-space-sm bg-surface-container-lowest"></div>
+      <nav class="flex flex-col gap-5 pt-3 pr-3" aria-label="Principal">
+        @for (g of nav; track g.label) {
+          <div class="flex flex-col gap-0.5">
+            <p class="m-0 mb-1 pl-4 text-caption text-on-surface-variant">{{ g.label }}</p>
+            @for (it of g.items; track it.link) {
+              <a
+                [routerLink]="it.link"
+                routerLinkActive="bg-surface-container-lowest! text-primary! font-medium shadow-[inset_3px_0_0_var(--color-primary)]"
+                [routerLinkActiveOptions]="{ exact: it.exact ?? true }"
+                class="flex items-center gap-2 rounded-r-[4px] text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors no-underline"
+                [class]="
+                  it.child
+                    ? 'ml-6 pl-4 pr-2 py-1.5 text-body-compact'
+                    : 'pl-4 pr-2 py-2 text-label-default'
+                "
+              >
+                @if (it.icon) {
+                  <app-material-icon [name]="it.icon" [size]="17" />
+                }
+                <span class="flex-1">{{ it.label }}</span>
+                @if (it.badge === 'unassigned' && unassigned.total() > 0) {
+                  <span
+                    class="min-w-5 px-1.5 py-0.5 rounded-full bg-error text-on-error text-[11px] leading-none font-semibold text-center tabular-nums"
+                    [attr.aria-label]="unassigned.total() + ' correos sin clasificar'"
+                    >{{ unassigned.total() }}</span
+                  >
+                }
+              </a>
+            }
+          </div>
+        }
+      </nav>
     </aside>
   `,
 })
 export class DashboardSidebar implements OnInit {
   readonly unassigned = inject(UnassignedService);
+  readonly nav = NAV;
 
   ngOnInit(): void {
     void this.unassigned.refresh();

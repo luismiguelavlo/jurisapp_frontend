@@ -7,33 +7,23 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MaterialIcon],
   template: `
-    <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
+    <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
       <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2">
-          <span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-primary-container"></span>
-          <h1 class="text-headline-lg text-on-surface tracking-tight m-0 font-semibold">Procesos</h1>
-        </div>
-        <p class="text-body-default text-on-surface-variant m-0">
-          Expedientes judiciales agrupados por radicado unificado nacional
+        <h1 class="m-0 text-headline-lg text-on-surface">Procesos</h1>
+        <p class="m-0 text-body-default text-on-surface-variant">
+          Un expediente por radicado, con el término de cada providencia.
         </p>
       </div>
-      <a
-        routerLink="/cases/sin-clasificar"
-        class="group flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest rounded-lg hover:bg-surface-container-low transition-colors shadow-sm no-underline"
-      >
-        <app-material-icon
-          name="folder_open"
-          [size]="16"
-          className="text-tertiary-container group-hover:rotate-12 transition-transform"
-        />
-        <span class="text-label-compact text-on-surface font-medium">Sin clasificar</span>
-        @if (unclassifiedCount() > 0) {
-          <span
-            class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[11px] font-medium bg-error-container text-on-error-container leading-none"
-            >{{ unclassifiedCount() }}</span
-          >
-        }
-      </a>
+      @if (unclassifiedCount() > 0) {
+        <a
+          routerLink="/cases/sin-clasificar"
+          class="inline-flex items-center gap-1.5 text-label-compact text-primary no-underline hover:underline"
+        >
+          <app-material-icon name="inbox" [size]="16" />
+          {{ unclassifiedCount() }} correo{{ unclassifiedCount() === 1 ? '' : 's' }} sin
+          clasificar
+        </a>
+      }
     </header>
   `,
 })

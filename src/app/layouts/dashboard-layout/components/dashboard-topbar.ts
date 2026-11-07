@@ -8,22 +8,21 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { alertsApi } from '../../../core/api/endpoints';
+import type { Role } from '../../../core/api/types';
 import { AuthService } from '../../../core/services/auth.service';
 import { MaterialIcon } from '../../../shared/components/material-icon/material-icon';
-import { ThemeToggle } from '../../../shared/components/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-dashboard-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialIcon, ThemeToggle, RouterLink],
+  imports: [MaterialIcon, RouterLink],
   template: `
     <header
-      class="fixed top-0 left-60 right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md z-40 px-margin flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+      class="fixed top-0 left-60 right-0 h-14 bg-background z-40 px-6 flex items-center justify-between border-b border-outline-variant/70"
     >
-      <div class="flex items-center gap-space-sm">
-        <span class="text-body-compact text-on-surface-variant font-medium">{{
-          auth.tenantName()
-        }}</span>
+      <div class="flex items-center gap-2 min-w-0">
+        <app-material-icon name="domain" [size]="16" className="text-on-surface-variant" />
+        <span class="text-label-default text-on-surface truncate">{{ auth.tenantName() }}</span>
       </div>
 
       <div class="flex items-center gap-space-md">
@@ -45,14 +44,13 @@ import { ThemeToggle } from '../../../shared/components/theme-toggle/theme-toggl
           <span class="text-body-compact text-on-surface">{{ auth.userEmail() }}</span>
           @if (auth.role(); as role) {
             <span
-              class="px-space-xs py-0.5 rounded-[6px] bg-surface-container-high text-on-surface-variant text-caption font-medium"
-              >{{ role }}</span
+              class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-caption"
+              >{{ roleLabel[role] }}</span
             >
           }
         </div>
 
         <div class="flex items-center gap-space-xs">
-          <app-theme-toggle variant="ghost" />
           <button
             type="button"
             class="text-label-compact text-on-surface-variant hover:text-error transition-colors px-space-xs py-1 cursor-pointer"
@@ -71,6 +69,11 @@ import { ThemeToggle } from '../../../shared/components/theme-toggle/theme-toggl
 export class DashboardTopbar implements OnInit {
   readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly roleLabel: Record<Role, string> = {
+    owner: 'Propietario',
+    admin: 'Administrador',
+    member: 'Miembro',
+  };
 
   readonly unread = signal(0);
   private intervalId: ReturnType<typeof setInterval> | null = null;

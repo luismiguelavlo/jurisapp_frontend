@@ -10,7 +10,7 @@ import { DashboardTopbar } from './components/dashboard-topbar';
   imports: [RouterOutlet, DashboardSidebar, DashboardTopbar, Toast],
   template: `
     <div
-      class="bg-background text-on-surface antialiased selection:bg-secondary-container selection:text-on-secondary-container min-h-screen"
+      class="bg-background text-on-surface antialiased min-h-screen"
     >
       <app-dashboard-sidebar />
       <div class="pl-60">

@@ -56,7 +56,7 @@ export class PasswordField implements ControlValueAccessor {
     if (this.variant() === 'surface') {
       return 'w-full h-9 pl-3 pr-9 rounded-[6px] bg-surface-container-lowest text-on-surface text-body-default outline-none transition-all placeholder:text-outline focus:bg-surface-container-low disabled:opacity-50';
     }
-    return 'w-full h-9 pl-3 pr-9 text-body-default bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[6px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors disabled:opacity-50';
+    return 'w-full h-9 pl-3 pr-9 text-body-default bg-surface-container-lowest border border-outline-variant rounded-[4px] text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors disabled:opacity-50';
   }
 
   writeValue(value: string | null): void {

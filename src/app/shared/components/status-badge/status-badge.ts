@@ -5,13 +5,13 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="flex items-center gap-1.5 px-2 py-1 rounded-[6px] bg-surface-container-lowest dark:bg-zinc-900 border border-outline-variant/40 dark:border-zinc-800 text-on-surface-variant dark:text-zinc-400"
+      class="flex items-center gap-1.5 px-2 py-1 rounded-[6px] bg-surface-container-lowest border border-outline-variant/40 text-on-surface-variant"
     >
       <span
         class="inline-block w-1.5 h-1.5 rounded-full animate-pulse"
-        [class]="online() ? 'bg-emerald-500' : 'bg-zinc-400'"
+        [class]="online() ? 'bg-emerald-500' : 'bg-outline'"
       ></span>
-      <span class="text-body-compact text-zinc-600 dark:text-zinc-400">{{ label() }}</span>
+      <span class="text-body-compact text-on-surface-variant">{{ label() }}</span>
     </div>
   `,
 })

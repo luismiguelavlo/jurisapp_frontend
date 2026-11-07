@@ -87,7 +87,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
               class="cursor-pointer p-1 rounded flex flex-col gap-1 items-center border-0"
               [class]="
                 currentPage() === p
-                  ? 'bg-[#F0FDFA] ring-1 ring-primary'
+                  ? 'bg-primary-fixed ring-1 ring-primary'
                   : 'bg-transparent hover:bg-surface-container-low'
               "
               (click)="pageChange.emit(p)"

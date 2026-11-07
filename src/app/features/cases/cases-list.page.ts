@@ -15,7 +15,6 @@ import { CasesTable } from './components/cases-table/cases-table';
 import { ProcessesEmptyState } from './components/processes-empty-state/processes-empty-state';
 import { ProcessesFilters } from './components/processes-filters/processes-filters';
 import { ProcessesHeader } from './components/processes-header/processes-header';
-import { ProcessesSummary } from './components/processes-summary/processes-summary';
 
 @Component({
   selector: 'app-cases-list-page',
@@ -25,11 +24,10 @@ import { ProcessesSummary } from './components/processes-summary/processes-summa
     ProcessesFilters,
     CasesTable,
     ProcessesEmptyState,
-    ProcessesSummary,
   ],
   template: `
     <div
-      class="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6"
+      class="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-5"
     >
       <app-processes-header [unclassifiedCount]="unassigned.total()" />
 
@@ -59,18 +57,26 @@ import { ProcessesSummary } from './components/processes-summary/processes-summa
       } @else if (items().length === 0) {
         <app-processes-empty-state kind="no-results" (resetFilters)="resetFilters()" />
       } @else {
-        <app-cases-table
-          [items]="items()"
-          [nextCursor]="nextCursor()"
-          [loadingMore]="loadingMore()"
-          (loadMore)="loadMore()"
-        />
+        <div class="flex flex-col gap-2">
+          <p class="m-0 text-body-compact" [class]="atRiskCount() ? 'text-error font-medium' : 'text-on-surface-variant'">
+            @if (atRiskCount() === 1) {
+              1 proceso vence en las próximas 48 horas o ya venció.
+            } @else if (atRiskCount() > 1) {
+              {{ atRiskCount() }} procesos vencen en las próximas 48 horas o ya vencieron.
+            } @else {
+              {{ items().length }} proceso{{ items().length === 1 ? '' : 's' }}{{
+                nextCursor() ? ' cargados' : ''
+              }}. Ninguno vence en las próximas 48 horas.
+            }
+          </p>
+          <app-cases-table
+            [items]="items()"
+            [nextCursor]="nextCursor()"
+            [loadingMore]="loadingMore()"
+            (loadMore)="loadMore()"
+          />
+        </div>
       }
-
-      <app-processes-summary
-        [atRiskCount]="atRiskCount()"
-        [unclassifiedCount]="unassigned.total()"
-      />
     </div>
   `,
 })
