@@ -9,7 +9,6 @@ import { ToastService } from '../../core/services/toast.service';
 import { ConnectMailboxModal } from './components/connect-mailbox-modal/connect-mailbox-modal';
 import { MailConnectionsHeader } from './components/mail-connections-header/mail-connections-header';
 import { MailboxEmptyState } from './components/mailbox-empty-state/mailbox-empty-state';
-import { MailboxMetaFooter } from './components/mailbox-meta-footer/mailbox-meta-footer';
 import { MailboxTable } from './components/mailbox-table/mailbox-table';
 import type { MailboxMenuAction } from './models/mailbox.models';
 
@@ -20,13 +19,12 @@ import type { MailboxMenuAction } from './models/mailbox.models';
     MailConnectionsHeader,
     MailboxTable,
     MailboxEmptyState,
-    MailboxMetaFooter,
     ConnectMailboxModal,
   ],
   template: `
-    <div class="max-w-[1120px] mx-auto p-space-xl">
+    <div class="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div
-        class="flex flex-col w-full transition-[filter,opacity]"
+        class="flex flex-col gap-5 w-full transition-[filter,opacity]"
         [class.opacity-40]="modalOpen()"
         [class.pointer-events-none]="modalOpen()"
         [class.select-none]="modalOpen()"
@@ -39,11 +37,15 @@ import type { MailboxMenuAction } from './models/mailbox.models';
         } @else if (connections().length === 0) {
           <app-mailbox-empty-state (connectClick)="openConnectModal()" />
         } @else {
-          <app-mailbox-table
-            [mailboxes]="connections()"
-            (action)="onRowAction($event.mailbox, $event.action)"
-          />
-          <app-mailbox-meta-footer [summary]="footerSummary()" />
+          <div class="flex flex-col gap-2">
+            <p class="m-0 text-body-compact" [class]="needsAttention() ? 'text-error font-medium' : 'text-on-surface-variant'">
+              {{ summary() }}
+            </p>
+            <app-mailbox-table
+              [mailboxes]="connections()"
+              (action)="onRowAction($event.mailbox, $event.action)"
+            />
+          </div>
         }
       </div>
     </div>
@@ -69,12 +71,21 @@ export class MailConnectionsPage {
     void this.reload();
   }
 
-  footerSummary(): string {
+  /** Buzones que hoy no están trayendo providencias por un problema que se puede resolver. */
+  needsAttention(): number {
+    return this.connections().filter((c) =>
+      c.status === 'reauth_required' || c.status === 'error' || c.status === 'pending',
+    ).length;
+  }
+
+  summary(): string {
     const list = this.connections();
     const active = list.filter((c) => c.status === 'active').length;
-    const warn = list.filter((c) => c.status === 'reauth_required' || c.status === 'error').length;
-    const disc = list.filter((c) => c.status === 'disconnected').length;
-    return `${list.length} buzones configurados (${active} activos, ${warn} con advertencia, ${disc} desconectados).`;
+    const attention = this.needsAttention();
+    const activos = active === 1 ? '1 buzón activo' : active + ' buzones activos';
+    if (attention === 0) return activos + '. Todo se está leyendo con normalidad.';
+    const necesitan = attention === 1 ? '1 necesita tu atención' : attention + ' necesitan tu atención';
+    return activos + '. ' + necesitan + ': mientras no se resuelva, pueden no llegar providencias.';
   }
 
   openConnectModal(): void {
@@ -105,7 +116,7 @@ export class MailConnectionsPage {
           await integrationsApi.sync(mailbox.id);
           this.toast.push({
             type: 'sync',
-            title: 'Sincronización en cola',
+            title: 'Lectura en cola',
             description: mailbox.mailbox_address,
           });
           break;
@@ -121,7 +132,7 @@ export class MailConnectionsPage {
           } else {
             this.toast.push({
               type: 'error',
-              title: 'Fallo de verificación',
+              title: 'La conexión sigue fallando',
               description: errorText(result.connection.last_error_code),
             });
           }

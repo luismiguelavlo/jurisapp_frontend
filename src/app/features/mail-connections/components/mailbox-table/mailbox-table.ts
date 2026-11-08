@@ -11,13 +11,17 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { fromEvent } from 'rxjs';
+import { errorText } from '../../../../core/api/errors';
 import {
+  connectionStatusHelp,
+  connectionStatusInk,
+  connectionStatusRail,
   formatRelativeTime,
   providerIcon,
   providerLabel,
   statusBadge,
-  statusDotClass,
 } from '../../../../core/api/labels';
+import { formatBogotaDateTime } from '../../../../core/utils/date-format';
 import type { EmailConnection } from '../../../../core/api/types';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
@@ -29,90 +33,106 @@ import type { MailboxMenuAction } from '../../models/mailbox.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MaterialIcon, MailboxRowMenu, RouterLink],
   template: `
-    <div class="bg-surface-container-lowest rounded-xl overflow-hidden">
-      <div
-        class="px-space-md py-space-sm flex flex-wrap items-center justify-between gap-space-sm"
-      >
-        <div class="relative w-full sm:w-72">
-          <span
-            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-on-surface-variant"
-          >
-            <app-material-icon name="search" [size]="16" />
-          </span>
-          <input
-            type="text"
-            class="w-full h-9 pl-9 pr-3 text-body-compact bg-surface-container-low text-on-surface placeholder:text-on-surface-variant rounded-lg focus:outline-none focus:bg-surface-container-lowest transition-all"
-            placeholder="Filtrar por dirección..."
-            [value]="filter()"
-            (input)="onFilterInput($event)"
-          />
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      @if (mailboxes().length > 5) {
+        <div class="px-6 py-3 border-b border-outline-variant/70">
+          <div class="relative w-full sm:w-72">
+            <label class="sr-only" for="mailbox-filter">Filtrar buzones</label>
+            <app-material-icon
+              name="search"
+              [size]="16"
+              className="absolute left-2.5 top-2 text-on-surface-variant pointer-events-none"
+            />
+            <input
+              id="mailbox-filter"
+              type="search"
+              class="w-full h-8 pl-8 pr-3 rounded-[4px] bg-surface-container-lowest border border-outline-variant text-body-compact text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              placeholder="Filtrar por dirección"
+              [value]="filter()"
+              (input)="onFilterInput($event)"
+            />
+          </div>
         </div>
-        <div class="flex items-center gap-space-xs text-on-surface-variant text-caption">
-          <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
-          <span>Sincronización en tiempo real</span>
-        </div>
-      </div>
+      }
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left">
+        <table class="w-full text-left border-collapse min-w-[760px]">
           <thead>
-            <tr class="h-9 bg-surface-container-low text-on-surface-variant text-label-compact">
-              <th class="px-space-md font-medium" scope="col">Buzón clínico</th>
-              <th class="px-space-md font-medium" scope="col">Proveedor</th>
-              <th class="px-space-md font-medium" scope="col">Estado</th>
-              <th class="px-space-md font-medium" scope="col">Última sincronización</th>
-              <th class="px-space-md font-medium text-right" scope="col">Acciones</th>
+            <tr class="text-caption text-on-surface-variant border-b border-outline-variant/70">
+              <th class="py-2.5 pl-6 pr-4 font-medium" scope="col">Buzón</th>
+              <th class="py-2.5 px-4 font-medium" scope="col">Estado</th>
+              <th class="py-2.5 px-4 font-medium whitespace-nowrap" scope="col">Última lectura</th>
+              <th class="py-2.5 pl-4 pr-6" scope="col"><span class="sr-only">Acciones</span></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-surface-container">
+          <tbody>
             @for (mailbox of filtered(); track mailbox.id) {
-              <tr
-                class="h-11 hover:bg-surface-container-low/60 transition-colors"
-                [class.opacity-60]="mailbox.status === 'disconnected'"
-              >
-                <td class="px-space-md py-2.5">
+              @let help = connectionStatusHelp(mailbox.status);
+              <tr class="border-b border-outline-variant/40 last:border-b-0 align-top">
+                <td class="py-3.5 pl-6 pr-4" [class]="connectionStatusRail(mailbox.status)">
                   <a
                     [routerLink]="['/conexiones', mailbox.id]"
-                    class="text-body-medium text-on-surface hover:underline truncate block"
+                    class="block text-body-default font-medium no-underline hover:underline break-all"
+                    [class]="mailbox.status === 'disconnected' ? 'text-on-surface-variant' : 'text-on-surface'"
                     >{{ mailbox.mailbox_address }}</a
                   >
+                  <span class="mt-0.5 inline-flex items-center gap-1 text-caption text-on-surface-variant">
+                    <app-material-icon [name]="providerIcon[mailbox.provider]" [size]="14" />
+                    {{ providerLabel[mailbox.provider] }}
+                  </span>
                 </td>
-                <td class="px-space-md py-2.5">
-                  <div class="inline-flex items-center gap-1.5 text-body-compact text-on-surface">
-                    <app-material-icon
-                      [name]="providerIcon[mailbox.provider]"
-                      [size]="16"
-                      className="text-on-surface-variant"
-                    />
-                    <span>{{ providerLabel[mailbox.provider] }}</span>
-                  </div>
-                </td>
-                <td class="px-space-md py-2.5">
-                  <div
-                    class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-surface-container-low text-on-surface"
-                  >
-                    <span
-                      class="w-1.5 h-1.5 rounded-full"
-                      [class]="statusDotClass(mailbox.status)"
-                    ></span>
-                    <span class="text-caption font-medium">{{
-                      statusBadge[mailbox.status].label
+                <td class="py-3.5 px-4 max-w-[340px]">
+                  <span class="block text-body-compact font-medium" [class]="connectionStatusInk(mailbox.status)">{{
+                    statusBadge[mailbox.status].label
+                  }}</span>
+                  @if (mailbox.status === 'error' && mailbox.last_error_code) {
+                    <span class="block text-caption text-on-surface-variant">{{
+                      errorText(mailbox.last_error_code)
                     }}</span>
-                  </div>
-                </td>
-                <td class="px-space-md py-2.5 text-body-compact text-on-surface-variant">
-                  {{ formatRelativeTime(mailbox.last_sync_at) }}
-                </td>
-                <td class="px-space-md py-2.5 text-right">
-                  @if (auth.canManage()) {
-                    <button
-                      type="button"
-                      class="w-7 h-7 inline-flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low cursor-pointer"
-                      (click)="toggleMenu(mailbox.id, $event)"
-                    >
-                      <app-material-icon name="more_horiz" [size]="16" />
-                    </button>
+                  } @else if (help) {
+                    <span class="block text-caption text-on-surface-variant">{{ help }}</span>
                   }
+                </td>
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <time
+                    class="text-body-compact text-on-surface"
+                    [attr.title]="mailbox.last_sync_at ? formatBogotaDateTime(mailbox.last_sync_at) : null"
+                    >{{ lastRead(mailbox) }}</time
+                  >
+                </td>
+                <td class="py-3 pl-4 pr-6">
+                  @if (auth.canManage()) {
+                    <div class="flex items-center justify-end gap-1">
+                      @if (primaryAction(mailbox); as pa) {
+                        <button
+                          type="button"
+                          class="h-8 px-3 rounded-[4px] text-label-compact whitespace-nowrap border-0 cursor-pointer"
+                          [class]="
+                            mailbox.status === 'disconnected'
+                              ? 'bg-transparent text-primary hover:bg-surface-container'
+                              : 'bg-primary text-on-primary hover:bg-brand-hover'
+                          "
+                          (click)="action.emit({ mailbox, action: pa })"
+                        >
+                          {{ pa.label }}
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        class="w-8 h-8 inline-flex items-center justify-center rounded-[4px] text-on-surface-variant hover:text-on-surface hover:bg-surface-container border-0 bg-transparent cursor-pointer"
+                        [attr.aria-label]="'Más acciones para ' + mailbox.mailbox_address"
+                        (click)="toggleMenu(mailbox.id, $event)"
+                      >
+                        <app-material-icon name="more_horiz" [size]="18" />
+                      </button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="px-6 py-6 text-body-compact text-on-surface-variant">
+                  Ningún buzón coincide con «{{ filter().trim() }}».
                 </td>
               </tr>
             }
@@ -150,8 +170,30 @@ export class MailboxTable {
   readonly providerLabel = providerLabel;
   readonly providerIcon = providerIcon;
   readonly statusBadge = statusBadge;
-  readonly statusDotClass = statusDotClass;
-  readonly formatRelativeTime = formatRelativeTime;
+  readonly connectionStatusRail = connectionStatusRail;
+  readonly connectionStatusInk = connectionStatusInk;
+  readonly connectionStatusHelp = connectionStatusHelp;
+  readonly formatBogotaDateTime = formatBogotaDateTime;
+  readonly errorText = errorText;
+
+  lastRead(m: EmailConnection): string {
+    return m.last_sync_at ? formatRelativeTime(m.last_sync_at) : 'Todavía no se ha leído';
+  }
+
+  /** Acción visible en la fila cuando el buzón necesita algo. */
+  primaryAction(m: EmailConnection): MailboxMenuAction | null {
+    switch (m.status) {
+      case 'reauth_required':
+      case 'pending':
+        return { id: 'reauth', label: 'Reautorizar', icon: 'key', tone: 'primary' };
+      case 'error':
+        return { id: 'test', label: 'Probar conexión', icon: 'wifi_tethering', tone: 'primary' };
+      case 'disconnected':
+        return { id: 'reauth', label: 'Reactivar', icon: 'restart_alt', tone: 'primary' };
+      default:
+        return null;
+    }
+  }
 
   readonly filtered = computed(() => {
     const q = this.filter().trim().toLowerCase();
@@ -219,23 +261,28 @@ export class MailboxTable {
     this.action.emit({ mailbox, action: menuAction });
   }
 
+  /** Menú secundario; la acción principal del estado ya está visible en la fila. */
   actionsFor(mailbox: EmailConnection): ReadonlyArray<MailboxMenuAction> {
-    if (mailbox.status === 'reauth_required') {
-      return [
-        { id: 'reauth', label: 'Reautorizar', icon: 'key', tone: 'primary' },
-        { id: 'disconnect', label: 'Desconectar', icon: 'link_off', tone: 'error', requiresAdmin: true },
-      ];
+    const open: MailboxMenuAction = { id: 'open', label: 'Ver detalle', icon: 'open_in_new' };
+    switch (mailbox.status) {
+      case 'reauth_required':
+      case 'pending':
+        return [open, { id: 'disconnect', label: 'Desconectar', icon: 'link_off', tone: 'error', requiresAdmin: true }];
+      case 'disconnected':
+        return [open, { id: 'disconnect', label: 'Eliminar configuración', icon: 'delete_forever', tone: 'error', requiresAdmin: true }];
+      case 'error':
+        return [
+          open,
+          { id: 'sync', label: 'Leer ahora', icon: 'sync' },
+          { id: 'disconnect', label: 'Desconectar', icon: 'link_off', tone: 'error', requiresAdmin: true },
+        ];
+      default:
+        return [
+          open,
+          { id: 'sync', label: 'Leer ahora', icon: 'sync' },
+          { id: 'test', label: 'Probar conexión', icon: 'wifi_tethering' },
+          { id: 'disconnect', label: 'Desconectar', icon: 'link_off', tone: 'error', requiresAdmin: true },
+        ];
     }
-    if (mailbox.status === 'disconnected') {
-      return [
-        { id: 'reauth', label: 'Reactivar conexión', icon: 'restart_alt', tone: 'primary', requiresAdmin: true },
-        { id: 'disconnect', label: 'Eliminar configuración', icon: 'delete_forever', tone: 'error', requiresAdmin: true },
-      ];
-    }
-    return [
-      { id: 'sync', label: 'Sincronizar ahora', icon: 'sync' },
-      { id: 'test', label: 'Probar conexión', icon: 'wifi_tethering' },
-      { id: 'disconnect', label: 'Desconectar', icon: 'link_off', tone: 'error', requiresAdmin: true },
-    ];
   }
 }

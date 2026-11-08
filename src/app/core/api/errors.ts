@@ -44,6 +44,8 @@ const texts: Record<string, string> = {
   invalid_upload: 'El archivo está vacío o no se pudo leer.',
   blob_store_unavailable: 'No se pudo guardar o abrir el archivo. Intenta más tarde.',
   case_profile_outdated: 'Llegaron documentos nuevos a este caso. Recarga la ficha.',
+  message_analysis_outdated: 'Llegó un análisis más reciente de este correo. Recarga la pantalla.',
+  message_analysis_unavailable: 'El correo aún no tiene análisis para confirmar.',
   invalid_entity_name: 'Ese nombre es demasiado genérico o el NIT no es válido.',
   entity_name_already_exists: 'Ese nombre ya está registrado.',
   entity_name_limit_reached: 'Llegaste al máximo de 20 nombres.',

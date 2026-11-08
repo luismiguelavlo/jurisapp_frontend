@@ -877,6 +877,67 @@ export interface InboxMessagePage {
 }
 
 export interface InboxMessageDetail extends InboxMessage {
-  /** Mismo orden que `documentos`; cada uno es el objeto de GET /documents/{id}. */
+  /** Mismo orden que `documentos`; cada uno es el objeto de GET /documents/{id} (visor y respuestas). */
   documentos_detalle: DocumentDetail[];
+  /** Ficha UNIFICADA del correo: cuerpo y todos sus documentos analizados juntos. */
+  analisis: MessageAnalysisState;
+}
+
+// —— Análisis unificado por correo ——
+
+export interface IdentificacionProceso {
+  radicado: string | null;
+  despacho: string | null;
+  municipio: string | null;
+  departamento: string | null;
+  correo_despacho: string | null;
+}
+
+/** Fuente del correo: el cuerpo (attachment_id null, índice 0) o un adjunto. */
+export interface DocumentoFuente {
+  indice: number;
+  attachment_id: string | null;
+  tipo_documento: TipoDocumento;
+  /** Páginas globales del correo. */
+  paginas: number[];
+}
+
+/** Página global n → fuente local. */
+export interface PaginaFuente {
+  n: number;
+  attachment_id: string | null;
+  pagina: number;
+}
+
+export interface MessageAnalysis extends DocumentAnalysis {
+  resumen_lectura: string | null;
+  /** Hechos en lista, cronológicos. */
+  hechos: string[];
+  identificacion: IdentificacionProceso;
+  documentos: DocumentoFuente[];
+  paginas: PaginaFuente[];
+}
+
+export type MessageAnalysisEstado = 'pendiente' | 'analizando' | 'listo' | 'fallido' | 'omitido';
+
+/** Derivados de `ficha.actuaciones[i]` (mismo orden). */
+export interface MessageActuacionDerivada {
+  attachment_id: string | null;
+  pagina: number | null;
+  vence_at: string | null;
+  exige_respuesta_entidad: boolean | null;
+}
+
+export interface MessageAnalysisState {
+  estado: MessageAnalysisEstado;
+  error_code: string | null;
+  analysis_id: string | null;
+  ficha: MessageAnalysis | null;
+  origen: 'modelo' | 'revision' | null;
+  revisado_at: string | null;
+  revisado_por: string | null;
+  analisis_posterior: boolean;
+  desactualizado: boolean;
+  calidad_entidad: 'accionada' | 'vinculada' | 'no_aparece' | null;
+  actuaciones: MessageActuacionDerivada[];
 }

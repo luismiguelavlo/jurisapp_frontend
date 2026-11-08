@@ -17,22 +17,65 @@ export const statusBadge: Record<
   { label: string; tone: 'green' | 'gray' | 'amber' | 'red' }
 > = {
   active: { label: 'Activa', tone: 'green' },
-  pending: { label: 'Pendiente', tone: 'gray' },
+  pending: { label: 'Autorización pendiente', tone: 'gray' },
   reauth_required: { label: 'Requiere reautorización', tone: 'amber' },
-  error: { label: 'Error', tone: 'red' },
+  error: { label: 'Con error', tone: 'red' },
   disconnected: { label: 'Desconectada', tone: 'gray' },
 };
 
 export function statusDotClass(status: ConnectionStatus): string {
   switch (status) {
     case 'active':
-      return 'bg-[#10b981]';
+      return 'bg-[#3f8f5f]';
     case 'reauth_required':
-      return 'bg-[#f59e0b]';
+      return 'bg-[#d08a1e]';
     case 'error':
-      return 'bg-[#f43f5e]';
+      return 'bg-error';
     default:
       return 'bg-outline-variant';
+  }
+}
+
+/** Borde lateral de la fila del buzón según su estado (mismo lenguaje que procesos). */
+export function connectionStatusRail(status: ConnectionStatus): string {
+  switch (status) {
+    case 'active':
+      return 'shadow-[inset_3px_0_0_#3f8f5f]';
+    case 'reauth_required':
+      return 'shadow-[inset_3px_0_0_#d08a1e]';
+    case 'error':
+      return 'shadow-[inset_3px_0_0_var(--color-error)]';
+    default:
+      return 'shadow-[inset_3px_0_0_var(--color-outline-variant)]';
+  }
+}
+
+export function connectionStatusInk(status: ConnectionStatus): string {
+  switch (status) {
+    case 'active':
+      return 'text-[#2f7049]';
+    case 'reauth_required':
+      return 'text-tertiary';
+    case 'error':
+      return 'text-error';
+    default:
+      return 'text-on-surface-variant';
+  }
+}
+
+/** Qué significa el estado para quien espera providencias, y qué hacer. */
+export function connectionStatusHelp(status: ConnectionStatus): string | null {
+  switch (status) {
+    case 'reauth_required':
+      return 'Los permisos vencieron o se revocaron. Mientras no lo reautorices, no llegan providencias de este buzón.';
+    case 'error':
+      return 'La última lectura falló; las providencias nuevas podrían no estar llegando.';
+    case 'pending':
+      return 'Falta terminar la autorización con el proveedor.';
+    case 'disconnected':
+      return 'No se está leyendo. Lo que ya llegó sigue en los procesos.';
+    default:
+      return null;
   }
 }
 

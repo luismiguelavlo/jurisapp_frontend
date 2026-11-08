@@ -179,6 +179,15 @@ export const inboxApi = {
     return api<T.InboxMessagePage>(`/messages?${q}`);
   },
   get: (messageId: string) => api<T.InboxMessageDetail>(`/messages/${messageId}`),
+  /** Confirma o corrige la ficha unificada del correo. 409 = llegó un análisis más reciente. */
+  review: (messageId: string, analysis_id: string, ficha: T.MessageAnalysis) =>
+    api<T.InboxMessageDetail>(`/messages/${messageId}/analysis`, {
+      method: 'PUT',
+      body: JSON.stringify({ analysis_id, ficha }),
+    }),
+  /** Pide de nuevo el análisis (lo hace el worker en segundo plano). */
+  reanalyze: (messageId: string) =>
+    api<T.InboxMessageDetail>(`/messages/${messageId}/analysis/retry`, post()),
 };
 
 export const alertsApi = {

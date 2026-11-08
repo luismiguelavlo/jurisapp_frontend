@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MaterialIcon } from '../material-icon/material-icon';
 
-export type AlertBannerVariant = 'error' | 'warning' | 'surface-error';
+export type AlertBannerVariant = 'error' | 'warning' | 'surface-error' | 'info';
 
 @Component({
   selector: 'app-alert-banner',
@@ -10,7 +10,7 @@ export type AlertBannerVariant = 'error' | 'warning' | 'surface-error';
   template: `
     <div class="flex items-start gap-space-xs rounded-[6px]" [class]="containerClass()" role="alert">
       <app-material-icon
-        [name]="variant() === 'warning' ? 'schedule' : 'error'"
+        [name]="variant() === 'warning' ? 'schedule' : variant() === 'info' ? 'info' : 'error'"
         [size]="16"
         [className]="iconClass() + ' shrink-0 mt-0.5'"
       />
@@ -31,6 +31,8 @@ export class AlertBanner {
     switch (this.variant()) {
       case 'surface-error':
         return 'p-3 bg-error-container text-on-error-container';
+      case 'info':
+        return 'items-center gap-2 px-2.5 py-2 border bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-900/60 text-sky-800 dark:text-sky-300';
       case 'warning':
         return 'items-center gap-2 px-2.5 py-2 border bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-400';
       default:
@@ -42,6 +44,8 @@ export class AlertBanner {
     switch (this.variant()) {
       case 'surface-error':
         return 'text-error';
+      case 'info':
+        return 'text-sky-700 dark:text-sky-300';
       case 'warning':
         return 'text-amber-700 dark:text-amber-400';
       default:
