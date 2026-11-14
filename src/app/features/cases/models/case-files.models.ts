@@ -4,10 +4,10 @@ import { itemTipo } from '../../../core/api/case-tree';
 export type CaseDetailTab = 'expediente' | 'correos' | 'timeline' | 'ficha';
 
 export const CASE_DETAIL_TABS: ReadonlyArray<{ id: CaseDetailTab; label: string }> = [
+  { id: 'ficha', label: 'Ficha del proceso' },
   { id: 'expediente', label: 'Expediente' },
   { id: 'correos', label: 'Correos del proceso' },
   { id: 'timeline', label: 'Línea de tiempo' },
-  { id: 'ficha', label: 'Ficha' },
 ];
 
 /** Busca el item del expediente que corresponde a un adjunto de correo. */

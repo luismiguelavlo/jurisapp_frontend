@@ -172,6 +172,7 @@ type MoveModalState =
         } @else if (tab() === 'ficha') {
           <app-case-profile-tab
             [caseId]="c.id"
+            [caso]="c"
             [userEmails]="userEmails()"
             (editingChange)="profileDirty = $event"
             (openSource)="openSource($event)"
@@ -319,7 +320,7 @@ export class CaseDetailPage implements OnInit {
   readonly folders = signal<CaseFolder[]>([]);
   readonly selectedFolderId = signal<string | null>(null);
   readonly query = signal('');
-  readonly tab = signal<CaseDetailTab>('expediente');
+  readonly tab = signal<CaseDetailTab>('ficha');
   readonly userEmails = signal<ReadonlyMap<string, string>>(new Map());
 
   readonly folderMenu = signal<FolderMenuState | null>(null);
@@ -406,8 +407,9 @@ export class CaseDetailPage implements OnInit {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
       const tab = q.get('tab');
       const known = CASE_DETAIL_TABS.find((t) => t.id === tab);
-      if (known) this.tab.set(known.id);
       const folder = q.get('folder');
+      if (known) this.tab.set(known.id);
+      else if (folder) this.tab.set('expediente');
       if (folder) this.selectedFolderId.set(folder);
     });
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((p) => {
