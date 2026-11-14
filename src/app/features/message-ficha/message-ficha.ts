@@ -18,6 +18,7 @@ import { FichaActuaciones } from './components/ficha-actuaciones/ficha-actuacion
 import { FichaAntecedentes } from './components/ficha-antecedentes/ficha-antecedentes';
 import { FichaCaso } from './components/ficha-caso/ficha-caso';
 import { FichaProceso } from './components/ficha-proceso/ficha-proceso';
+import { FichaResumen } from './components/ficha-resumen/ficha-resumen';
 import { FichaServicio } from './components/ficha-servicio/ficha-servicio';
 import type { DocumentPageRef, FichaPatch } from './ficha-ui';
 
@@ -37,6 +38,7 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
     FichaCaso,
     FichaAntecedentes,
     FichaActuaciones,
+    FichaResumen,
   ],
   template: `
     @let st = state();
@@ -45,7 +47,9 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
         class="px-5 sm:px-6 py-4 border-b border-surface-container-high flex flex-wrap items-start justify-between gap-3"
       >
         <div class="min-w-0">
-          <h2 class="m-0 text-headline-md text-on-surface">Verifique los datos antes de guardar</h2>
+          <h2 class="m-0 text-headline-md text-on-surface">
+            {{ editing() ? 'Verifique los datos antes de guardar' : 'Ficha del proceso' }}
+          </h2>
           <p class="m-0 mt-1 text-body-compact text-on-surface-variant">
             {{ documentosLabel() }} · Datos propuestos a partir del correo y de todos sus documentos, leídos juntos.
             @if (st.origen === 'revision' && st.revisado_at) {
@@ -55,13 +59,21 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
         </div>
         @if (draft()) {
           <div class="flex items-center gap-2">
-            @if (dirty()) {
+            @if (editing()) {
               <button
                 type="button"
                 class="h-9 px-3 rounded-md border border-outline-variant bg-transparent text-label-compact text-on-surface cursor-pointer hover:bg-surface-container-low"
-                (click)="discard()"
+                (click)="cancelEdit()"
               >
-                Descartar cambios
+                {{ dirty() ? 'Descartar cambios' : 'Cancelar' }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="h-9 px-3 rounded-md border border-outline-variant bg-transparent text-label-compact text-on-surface cursor-pointer hover:bg-surface-container-low inline-flex items-center gap-1.5"
+                (click)="editing.set(true)"
+              >
+                <app-material-icon name="edit" [size]="16" /> Editar datos
               </button>
             }
             <button
@@ -122,7 +134,7 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
         }
 
         @if (draft(); as f) {
-          @if (f.resumen_lectura || f.observaciones) {
+          @if (editing() && (f.resumen_lectura || f.observaciones)) {
             <div class="rounded-lg bg-[#FEF7E6] text-[#5B4300] px-4 py-3 text-body-default leading-relaxed">
               @if (f.resumen_lectura) {
                 <p class="m-0"><strong>Observaciones de la lectura:</strong> {{ f.resumen_lectura }}</p>
@@ -135,6 +147,9 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
             </div>
           }
 
+          @if (!editing()) {
+            <app-ficha-resumen [ficha]="f" [state]="st" [recibidoAt]="recibidoAt()" />
+          } @else {
           <app-ficha-proceso
             [identificacion]="f.identificacion"
             [calidadEntidad]="st.calidad_entidad"
@@ -169,6 +184,7 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
               {{ saving() ? 'Guardando…' : 'Confirmar datos' }}
             </button>
           </footer>
+          }
         }
       </div>
     </article>
@@ -185,6 +201,8 @@ export class MessageFicha {
   readonly openPage = output<DocumentPageRef>();
 
   readonly draft = signal<MessageAnalysis | null>(null);
+  /** false = vista de lectura; true = formulario de revisión. */
+  readonly editing = signal(false);
   private readonly baseline = signal<string>('');
   readonly formatDate = formatBogotaDateTime;
 
@@ -228,6 +246,11 @@ export class MessageFicha {
     this.draft.update((d) => (d ? { ...d, ...change } : d));
   }
 
+  cancelEdit(): void {
+    this.discard();
+    this.editing.set(false);
+  }
+
   discard(): void {
     const b = this.baseline();
     this.draft.set(b ? (JSON.parse(b) as MessageAnalysis) : null);
@@ -241,6 +264,7 @@ export class MessageFicha {
 
   /** Lo que el usuario dejó vacío no se guarda; los hechos alimentan también el resumen del caso. */
   markSaved(ficha: MessageAnalysis | null): void {
+    this.editing.set(false);
     this.draft.set(ficha ? structuredClone(ficha) : null);
     this.baseline.set(ficha ? JSON.stringify(ficha) : '');
   }

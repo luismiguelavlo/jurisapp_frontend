@@ -1,6 +1,7 @@
 import { CALIDAD_AGENTE, UNIDAD_TERMINO } from '../../../core/api/ficha-labels';
 import { providenciaTitle } from '../../../core/api/document-labels';
 import type {
+  Actuacion,
   ActuacionFicha,
   CaseDetail,
   CaseProfile,
@@ -80,11 +81,14 @@ const PROVIDENCIA_SUBTIPO: Partial<Record<Subtipo, string>> = {
   segunda_instancia: 'Sentencia de segunda instancia',
 };
 
+/** Nombre de la providencia que contiene una actuación. */
+export function actuacionTipoLabel(a: Actuacion): string {
+  if (a.tipo === 'decision_desacato' && a.decision_desacato === 'sanciona') return 'Sanción';
+  return PROVIDENCIA_ACTUACION[a.tipo];
+}
+
 function actuacionLabel(a: ActuacionFicha): string {
-  if (a.actuacion.tipo === 'decision_desacato' && a.actuacion.decision_desacato === 'sanciona') {
-    return 'Sanción';
-  }
-  return PROVIDENCIA_ACTUACION[a.actuacion.tipo];
+  return actuacionTipoLabel(a.actuacion);
 }
 
 function entryLabel(e: TimelineEntry): string {
@@ -92,7 +96,7 @@ function entryLabel(e: TimelineEntry): string {
   return mapped ?? providenciaTitle(e.clase, e.subtipo);
 }
 
-function terminoText(t: { cantidad: number; unidad: keyof typeof UNIDAD_TERMINO } | null): string | null {
+export function terminoText(t: { cantidad: number; unidad: keyof typeof UNIDAD_TERMINO } | null): string | null {
   return t ? `${t.cantidad} ${UNIDAD_TERMINO[t.unidad]}` : null;
 }
 
@@ -127,7 +131,7 @@ function lastProvidencia(
   };
 }
 
-function docText(id: { tipo: string; numero: string } | null | undefined): string | null {
+export function docText(id: { tipo: string; numero: string } | null | undefined): string | null {
   return id?.numero ? `${id.tipo} ${id.numero}` : null;
 }
 

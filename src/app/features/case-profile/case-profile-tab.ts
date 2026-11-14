@@ -9,13 +9,11 @@ import {
   untracked,
 } from '@angular/core';
 import { ApiError } from '../../core/api/client';
-import { casesApi, documentsApi, entityNamesApi } from '../../core/api/endpoints';
+import { casesApi, entityNamesApi } from '../../core/api/endpoints';
 import { errorText } from '../../core/api/errors';
 import type {
   Actuacion,
-  CaseDetail,
   CaseProfile,
-  DocumentItem,
   CaseProfileResponse,
   Fuente,
   ParteFicha,
@@ -25,11 +23,7 @@ import { normalizeEntityName } from '../../core/utils/entity-name';
 import { ActuacionCard } from '../../shared/components/actuacion-card/actuacion-card';
 import { AlertBanner } from '../../shared/components/alert-banner/alert-banner';
 import { MaterialIcon } from '../../shared/components/material-icon/material-icon';
-import { ProfileAiSummary } from './components/profile-ai-summary/profile-ai-summary';
 import { ProfileAntecedentes } from './components/profile-antecedentes/profile-antecedentes';
-import { ProfileIdentificacion } from './components/profile-identificacion/profile-identificacion';
-import { ProfileObjeto } from './components/profile-objeto/profile-objeto';
-import { buildIdentificacion } from './models/case-overview.models';
 import { ProfileEntityBanner } from './components/profile-entity-banner/profile-entity-banner';
 import { ProfileHeaderCard } from './components/profile-header-card/profile-header-card';
 import { ProfileMedida } from './components/profile-medida/profile-medida';
@@ -70,11 +64,8 @@ const BTN =
     AlertBanner,
     MaterialIcon,
     ActuacionCard,
-    ProfileAiSummary,
     ProfileAntecedentes,
     ProfileEntityBanner,
-    ProfileIdentificacion,
-    ProfileObjeto,
     ProfileHeaderCard,
     ProfileMedida,
     ProfileParties,
@@ -99,15 +90,13 @@ const BTN =
       </div>
     } @else if (view(); as f) {
       @if (empty()) {
-        <div class="flex flex-col gap-4">
-          <app-alert-banner variant="info" title="Todavía no hay ficha para este caso">
-            Se arma sola cuando se analizan los documentos del expediente. Si acaban de llegar,
-            vuelve en unos minutos.
-          </app-alert-banner>
-          @if (identificacion(); as idv) {
-            <app-profile-identificacion [data]="idv" />
-          }
-        </div>
+        <section class="bg-surface-container-lowest rounded-xl px-6 py-10 shadow-sm flex flex-col gap-2">
+          <p class="m-0 text-headline-sm text-on-surface">Todavía no hay ficha para este caso</p>
+          <p class="m-0 text-body-default text-on-surface-variant max-w-[60ch]">
+            La ficha se arma sola cuando se analizan los documentos del expediente. Si acaban de
+            llegar, vuelve en unos minutos.
+          </p>
+        </section>
       } @else {
         <div class="flex flex-col gap-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
@@ -174,28 +163,6 @@ const BTN =
             </app-alert-banner>
           }
 
-          @if (!editing()) {
-            <app-profile-ai-summary
-              [text]="f.hechos_resumen?.valor ?? null"
-              [reviewed]="f.hechos_resumen?.origen === 'revision'"
-            />
-            @if (identificacion(); as idv) {
-              <app-profile-identificacion [data]="idv" />
-            }
-            <app-profile-objeto
-              [objeto]="f.objeto?.valor ?? null"
-              [tecnologias]="f.tecnologias?.valor ?? null"
-              [derechos]="f.derechos_invocados?.valor ?? null"
-              [lugar]="f.lugar_atencion?.valor ?? null"
-            />
-            <p class="m-0 text-caption text-on-surface-variant">
-              @if (data()?.reviewed_at; as r) {
-                Ficha revisada por {{ reviewerLabel() }} el {{ formatBogotaDateTime(r) }}.
-              } @else {
-                Nadie ha revisado esta ficha todavía.
-              }
-            </p>
-          } @else {
           <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 items-start">
             <!-- Hoja principal -->
             <article
@@ -491,7 +458,6 @@ const BTN =
               </app-profile-section>
             </aside>
           </div>
-          }
         </div>
       }
     }
@@ -500,8 +466,6 @@ const BTN =
 export class CaseProfileTab {
   readonly caseId = input.required<string>();
   readonly userEmails = input<ReadonlyMap<string, string>>(new Map());
-  /** Detalle del caso: radicado y línea de tiempo para la identificación del proceso. */
-  readonly caso = input<CaseDetail | null>(null);
 
   readonly openSource = output<Fuente>();
   /** true mientras hay una revisión sin guardar (para avisar al salir de la pestaña). */
@@ -527,13 +491,6 @@ export class CaseProfileTab {
   readonly outdated = signal(false);
   readonly formError = signal<string | null>(null);
   readonly entityNames = signal<readonly string[]>([]);
-  /** Providencias extraídas del radicado: juzgado, correo y documentos de las partes. */
-  readonly docs = signal<readonly DocumentItem[]>([]);
-
-  readonly identificacion = computed(() => {
-    const c = this.caso();
-    return c ? buildIdentificacion(c, this.data()?.ficha ?? null, this.docs()) : null;
-  });
 
   readonly editing = computed(() => this.draft() !== null);
   readonly view = computed(() => this.draft() ?? this.data()?.ficha ?? null);
@@ -569,24 +526,6 @@ export class CaseProfileTab {
       untracked(() => void this.load());
     });
     effect(() => this.editingChange.emit(this.dirty()));
-    effect(() => {
-      const radicado = this.caso()?.radicado;
-      untracked(() => void this.loadDocs(radicado));
-    });
-  }
-
-  private async loadDocs(radicado: string | undefined): Promise<void> {
-    if (!radicado) {
-      this.docs.set([]);
-      return;
-    }
-    try {
-      const page = await documentsApi.list({ radicado, document_status: 'extracted' }, null, 50);
-      this.docs.set(page.items);
-    } catch {
-      // opcional: sin extracción la identificación usa la ficha y la línea de tiempo
-      this.docs.set([]);
-    }
   }
 
   async load(): Promise<void> {
