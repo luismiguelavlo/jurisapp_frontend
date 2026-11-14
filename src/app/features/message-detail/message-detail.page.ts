@@ -74,6 +74,7 @@ const POLL_MAX = 60;
               [state]="m.analisis"
               [documentosCount]="m.documentos_count"
               [recibidoAt]="m.correo.recibido_at"
+              [remitente]="m.correo.remitente"
               [saving]="saving()"
               (save)="onSave($event)"
               (reanalyze)="onReanalyze()"

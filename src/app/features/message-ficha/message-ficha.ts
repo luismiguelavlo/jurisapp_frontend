@@ -149,6 +149,15 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
 
           @if (!editing()) {
             <app-ficha-resumen [ficha]="f" [state]="st" [recibidoAt]="recibidoAt()" />
+            <div class="flex justify-end">
+              <button
+                type="button"
+                class="h-10 px-4 rounded-md border border-primary bg-transparent text-label-default font-semibold text-primary cursor-pointer hover:bg-primary-fixed/40 inline-flex items-center gap-1.5"
+                (click)="editing.set(true)"
+              >
+                <app-material-icon name="edit" [size]="16" /> Editar datos
+              </button>
+            </div>
           } @else {
           <app-ficha-proceso
             [identificacion]="f.identificacion"
@@ -194,6 +203,8 @@ export class MessageFicha {
   readonly state = input.required<MessageAnalysisState>();
   readonly documentosCount = input(0);
   readonly recibidoAt = input<string | null>(null);
+  /** Remitente del correo: es el correo del juzgado. */
+  readonly remitente = input<string | null>(null);
   readonly saving = input(false);
 
   readonly save = output<MessageAnalysis>();
@@ -209,10 +220,11 @@ export class MessageFicha {
   constructor() {
     // Una ficha nueva del servidor reemplaza el borrador solo si no hay cambios sin guardar.
     effect(() => {
-      const ficha = this.state().ficha;
+      const st = this.state();
       untracked(() => {
         if (this.dirty() && this.draft()) return;
-        this.draft.set(ficha ? structuredClone(ficha) : null);
+        const ficha = st.ficha ? withCorreoJuzgado(structuredClone(st.ficha), st, this.remitente()) : null;
+        this.draft.set(ficha);
         this.baseline.set(ficha ? JSON.stringify(ficha) : '');
       });
     });
@@ -268,6 +280,17 @@ export class MessageFicha {
     this.draft.set(ficha ? structuredClone(ficha) : null);
     this.baseline.set(ficha ? JSON.stringify(ficha) : '');
   }
+}
+
+/** Sin revisión humana, el correo del despacho es el remitente del correo (de ahí llega todo). */
+function withCorreoJuzgado(
+  f: MessageAnalysis,
+  st: MessageAnalysisState,
+  remitente: string | null,
+): MessageAnalysis {
+  const email = remitente?.match(/[^\s<>"']+@[^\s<>"']+/)?.[0]?.toLowerCase() ?? null;
+  if (!email || (st.origen === 'revision' && f.identificacion.correo_despacho)) return f;
+  return { ...f, identificacion: { ...f.identificacion, correo_despacho: email } };
 }
 
 function clean(f: MessageAnalysis): MessageAnalysis {
