@@ -55,7 +55,7 @@ export interface IdentificacionView {
 }
 
 /** Tipos de providencia con el nombre que usa el equipo jurídico. */
-const PROVIDENCIA_ACTUACION: Record<TipoActuacion, string> = {
+export const PROVIDENCIA_ACTUACION: Record<TipoActuacion, string> = {
   admisorio: 'Auto que admite o vincula',
   medida_provisional: 'Medida provisional',
   requerimiento: 'Auto que requiere',

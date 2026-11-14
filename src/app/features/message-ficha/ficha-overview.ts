@@ -61,12 +61,9 @@ function ultimaProvidencia(
   state: MessageAnalysisState,
   recibidoAt: string | null,
 ): ProvidenciaView | null {
-  if (!f.actuaciones.length) return null;
-  let idx = 0;
-  f.actuaciones.forEach((a, i) => {
-    if ((a.fecha_providencia ?? '') > (f.actuaciones[idx]!.fecha_providencia ?? '')) idx = i;
-  });
-  const a = f.actuaciones[idx]!;
+  const idx = ultimaActuacionIndex(f);
+  const a = f.actuaciones[idx];
+  if (!a) return null;
   return {
     tipo: actuacionTipoLabel(a),
     fechaAuto: a.fecha_providencia,
@@ -75,4 +72,13 @@ function ultimaProvidencia(
     venceAt: state.actuaciones[idx]?.vence_at ?? null,
     estado: null,
   };
+}
+
+/** Índice de la actuación con la fecha de providencia más reciente (-1 si no hay). */
+export function ultimaActuacionIndex(f: MessageAnalysis): number {
+  let idx = -1;
+  f.actuaciones.forEach((a, i) => {
+    if (idx < 0 || (a.fecha_providencia ?? '') > (f.actuaciones[idx]!.fecha_providencia ?? '')) idx = i;
+  });
+  return idx;
 }

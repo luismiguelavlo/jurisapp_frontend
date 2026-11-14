@@ -13,13 +13,10 @@ import { errorText } from '../../core/api/errors';
 import { formatBogotaDateTime } from '../../core/utils/date-format';
 import { AlertBanner } from '../../shared/components/alert-banner/alert-banner';
 import { MaterialIcon } from '../../shared/components/material-icon/material-icon';
-import { FichaAccionante } from './components/ficha-accionante/ficha-accionante';
-import { FichaActuaciones } from './components/ficha-actuaciones/ficha-actuaciones';
-import { FichaAntecedentes } from './components/ficha-antecedentes/ficha-antecedentes';
-import { FichaCaso } from './components/ficha-caso/ficha-caso';
-import { FichaProceso } from './components/ficha-proceso/ficha-proceso';
+import { EditIdentificacion } from './components/edit-identificacion/edit-identificacion';
+import { EditObjeto } from './components/edit-objeto/edit-objeto';
+import { EditResumen } from './components/edit-resumen/edit-resumen';
 import { FichaResumen } from './components/ficha-resumen/ficha-resumen';
-import { FichaServicio } from './components/ficha-servicio/ficha-servicio';
 import type { DocumentPageRef, FichaPatch } from './ficha-ui';
 
 /**
@@ -32,13 +29,10 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
   imports: [
     AlertBanner,
     MaterialIcon,
-    FichaProceso,
-    FichaAccionante,
-    FichaServicio,
-    FichaCaso,
-    FichaAntecedentes,
-    FichaActuaciones,
     FichaResumen,
+    EditResumen,
+    EditIdentificacion,
+    EditObjeto,
   ],
   template: `
     @let st = state();
@@ -159,22 +153,9 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
               </button>
             </div>
           } @else {
-          <app-ficha-proceso
-            [identificacion]="f.identificacion"
-            [calidadEntidad]="st.calidad_entidad"
-            (patched)="patch($event)"
-          />
-          <app-ficha-accionante [ficha]="f" (patched)="patch($event)" />
-          <app-ficha-servicio [ficha]="f" (patched)="patch($event)" />
-          <app-ficha-caso [ficha]="f" (patched)="patch($event)" />
-          <app-ficha-antecedentes [ficha]="f" (patched)="patch($event)" />
-          <app-ficha-actuaciones
-            [actuaciones]="f.actuaciones"
-            [derivadas]="dirty() ? [] : st.actuaciones"
-            [recibidoAt]="recibidoAt()"
-            (changed)="patch({ actuaciones: $event })"
-            (openPage)="openPage.emit($event)"
-          />
+          <app-edit-resumen [text]="f.hechos_resumen" (patched)="patch($event)" />
+          <app-edit-identificacion [ficha]="f" [recibidoAt]="recibidoAt()" (patched)="patch($event)" />
+          <app-edit-objeto [ficha]="f" (patched)="patch($event)" />
 
           <footer class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-surface-container-high">
             <button
@@ -274,7 +255,7 @@ export class MessageFicha {
     this.save.emit(clean(d));
   }
 
-  /** Lo que el usuario dejó vacío no se guarda; los hechos alimentan también el resumen del caso. */
+  /** Lo que el usuario dejó vacío no se guarda; el resumen editado se respeta; si queda vacío se arma con los hechos. */
   markSaved(ficha: MessageAnalysis | null): void {
     this.editing.set(false);
     this.draft.set(ficha ? structuredClone(ficha) : null);
@@ -300,7 +281,11 @@ function clean(f: MessageAnalysis): MessageAnalysis {
   return {
     ...f,
     hechos,
-    hechos_resumen: hechos.length ? hechos.map((h) => `• ${h}`).join('\n').slice(0, 2000) : f.hechos_resumen,
+    hechos_resumen:
+      f.hechos_resumen?.trim() || (hechos.length ? hechos.map((h) => `• ${h}`).join('\n').slice(0, 2000) : null),
+    partes_mencionadas: f.partes_mencionadas
+      .map((p) => ({ ...p, nombre: p.nombre.trim() }))
+      .filter((p) => p.nombre),
     pretensiones: texts(f.pretensiones),
     derechos_invocados: texts(f.derechos_invocados),
     pruebas_aportadas: texts(f.pruebas_aportadas),
