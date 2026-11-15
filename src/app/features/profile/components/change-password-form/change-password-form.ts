@@ -12,7 +12,7 @@ export type ChangePasswordError = 'invalid_credentials' | 'weak_password' | 'pas
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, PasswordField, NewPasswordFields, AlertBanner],
   template: `
-    <form class="flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="flex flex-col gap-4" (submit)="$event.preventDefault(); submit()">
       @switch (error()) {
         @case ('invalid_credentials') {
           <app-alert-banner variant="error">La contraseña actual no es correcta.</app-alert-banner>

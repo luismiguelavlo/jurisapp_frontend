@@ -12,7 +12,7 @@ export interface ProfileName {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
   template: `
-    <form class="flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="flex flex-col gap-4" (submit)="$event.preventDefault(); submit()">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-label-compact text-on-surface mb-1" for="me-first">Nombre</label>

@@ -25,7 +25,7 @@ import { AuthCard } from '../components/auth-card/auth-card';
         title="Crea tu nueva contraseña"
         description="Entraste con una contraseña temporal. Para seguir, elige una propia: la temporal ya no volverá a funcionar."
       >
-        <form class="flex flex-col gap-4" (ngSubmit)="submit()">
+        <form class="flex flex-col gap-4" (submit)="$event.preventDefault(); submit()">
           @if (error() === 'password_reused') {
             <app-alert-banner variant="error">Esa es una contraseña que ya usaste. Elige una diferente.</app-alert-banner>
           } @else if (error() === 'weak_password') {

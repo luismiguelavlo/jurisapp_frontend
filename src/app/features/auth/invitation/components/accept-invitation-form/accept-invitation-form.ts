@@ -20,7 +20,7 @@ export type AcceptError = 'weak_password' | 'invalid_name' | 'invalid_credential
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, NewPasswordFields, PasswordField, AlertBanner],
   template: `
-    <form class="flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="flex flex-col gap-4" (submit)="$event.preventDefault(); submit()">
       @switch (error()) {
         @case ('weak_password') {
           <app-alert-banner variant="error">Esa contraseña es muy débil. Usa entre {{ preview().password_min_length }} y 128 caracteres, con al menos 4 distintos, y que no sea tu correo.</app-alert-banner>
