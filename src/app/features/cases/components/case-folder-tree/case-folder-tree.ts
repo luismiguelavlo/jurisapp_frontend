@@ -33,7 +33,7 @@ import type { FlatFolderRow } from '../../models/case-files.models';
             [attr.aria-current]="active ? 'true' : null"
           >
             <app-material-icon
-              [name]="row.folder.origen === 'correo' ? 'mail' : active ? 'folder_open' : 'folder'"
+              [name]="icon(row, active)"
               [size]="16"
               [className]="active ? 'text-primary' : 'text-on-surface-variant'"
             />
@@ -72,6 +72,13 @@ export class CaseFolderTree {
   readonly selectedId = input<string | null>(null);
   readonly select = output<string>();
   readonly menu = output<{ id: string; name: string; x: number; y: number }>();
+
+  /** Correo, "Gestión procesal" de un correo (SPEC 25) o carpeta manual. */
+  icon(row: FlatFolderRow, active: boolean): string {
+    if (row.folder.origen === 'correo') return 'mail';
+    if (row.folder.gestion_message_id) return 'fact_check';
+    return active ? 'folder_open' : 'folder';
+  }
 
   onMenu(event: MouseEvent, id: string, name: string): void {
     event.stopPropagation();

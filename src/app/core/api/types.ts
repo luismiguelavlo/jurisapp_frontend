@@ -395,6 +395,8 @@ export interface CaseFolder {
   } | null;
   items: CaseFolderItem[];
   children: CaseFolder[];
+  /** Carpeta "Gestión procesal" de ese correo (SPEC 25); null en las demás. */
+  gestion_message_id?: string | null;
 }
 
 export interface CaseFiles {
@@ -450,6 +452,31 @@ export interface CaseUpload {
   uploaded_by: string;
   created_at: string;
 }
+
+/** Soporte PDF de la gestión procesal de un correo (SPEC 25). Es un item `subido` del expediente. */
+export interface GestionSupport {
+  item_id: string;
+  upload_id: string;
+  case_id: string;
+  /** Carpeta "Gestión procesal" (o donde esté ahora dentro del expediente). */
+  folder_id: string;
+  filename: string;
+  content_type: 'application/pdf';
+  size_bytes: number;
+  uploaded_by: string;
+  uploaded_by_first_name: string | null;
+  uploaded_by_last_name: string | null;
+  uploaded_by_email: string;
+  created_at: string;
+}
+
+export interface GestionProcesal {
+  /** Del más antiguo al más reciente; sin los de la papelera. */
+  soportes: GestionSupport[];
+}
+
+/** Máximo de PDF por envío en la gestión procesal (sin tope total por correo). */
+export const GESTION_MAX_FILES = 5;
 
 export interface CaseItemRef {
   id: string;

@@ -177,6 +177,20 @@ export const caseFilesApi = {
   trash: (caseId: string) => api<T.CaseTrash>(`/cases/${caseId}/trash`),
 };
 
+/** Gestión procesal del correo (SPEC 25): soportes PDF que quedan en el expediente del caso. */
+export const gestionApi = {
+  list: (messageId: string) => api<T.GestionProcesal>(`/messages/${messageId}/gestion-procesal`),
+  /** De 1 a 5 PDF por envío; todos o ninguno. */
+  upload: (messageId: string, files: File[]) => {
+    const form = new FormData();
+    for (const f of files) form.append('files', f);
+    return api<T.GestionSupport[]>(`/messages/${messageId}/gestion-procesal`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
 export const dashboardApi = {
   summary: (dias = 30, dias_vencimiento = 10) => {
     const q = new URLSearchParams({

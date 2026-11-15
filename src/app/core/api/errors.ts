@@ -42,6 +42,9 @@ const texts: Record<string, string> = {
   unsupported_upload_type:
     'Solo PDF, Word (.docx), Excel (.xlsx), JPG o PNG; el contenido debe coincidir con la extensión.',
   invalid_upload: 'El archivo está vacío o no se pudo leer.',
+  message_without_case:
+    'Este correo aún no está asociado a un proceso. Asígnalo a un proceso para anexar soportes.',
+  too_many_files: 'Máximo 5 archivos por envío.',
   blob_store_unavailable: 'No se pudo guardar o abrir el archivo. Intenta más tarde.',
   case_profile_outdated: 'Llegaron documentos nuevos a este caso. Recarga la ficha.',
   message_analysis_outdated: 'Llegó un análisis más reciente de este correo. Recarga la pantalla.',

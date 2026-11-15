@@ -32,6 +32,7 @@ import { RecordResponseModal } from '../providencia-review/components/record-res
 import { MessageDocumentsPanel } from '../message-ficha/components/message-documents-panel/message-documents-panel';
 import type { DocumentPageRef } from '../message-ficha/ficha-ui';
 import { MessageFicha } from '../message-ficha/message-ficha';
+import { GestionProcesalPanel } from './components/gestion-procesal/gestion-procesal-panel';
 import { MessageDetailHeader } from './components/message-detail-header/message-detail-header';
 import { ReassignMessageDialog } from './components/reassign-message-dialog/reassign-message-dialog';
 
@@ -53,6 +54,7 @@ const POLL_MAX = 60;
     AssignCaseModal,
     RecordResponseModal,
     ReassignMessageDialog,
+    GestionProcesalPanel,
   ],
   template: `
     <div
@@ -84,7 +86,7 @@ const POLL_MAX = 60;
         />
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-md items-start">
-          <section class="xl:col-span-7 min-w-0">
+          <section class="xl:col-span-7 min-w-0 flex flex-col gap-space-md">
             <app-message-ficha
               [state]="m.analisis"
               [documentosCount]="m.documentos_count"
@@ -96,6 +98,8 @@ const POLL_MAX = 60;
               (reanalyze)="onReanalyze()"
               (openPage)="openPage($event)"
             />
+            <!-- Debajo del objeto de la tutela (SPEC 25). El auxiliar también anexa: solo ve sus correos. -->
+            <app-gestion-procesal-panel [messageId]="m.message_id" [caseId]="m.caso.case_id" />
           </section>
           <aside class="xl:col-span-5 min-w-0 xl:sticky xl:top-16">
             @if (m.documentos_detalle.length) {
