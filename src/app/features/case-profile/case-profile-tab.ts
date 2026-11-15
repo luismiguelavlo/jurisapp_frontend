@@ -3,12 +3,14 @@ import {
   Component,
   computed,
   effect,
+  inject,
   input,
   output,
   signal,
   untracked,
 } from '@angular/core';
 import { ApiError } from '../../core/api/client';
+import { AuthService } from '../../core/services/auth.service';
 import { casesApi, entityNamesApi } from '../../core/api/endpoints';
 import { errorText } from '../../core/api/errors';
 import type {
@@ -104,7 +106,12 @@ const BTN =
               <app-profile-entity-banner [ficha]="f" />
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              @if (!editing()) {
+              @if (!canEdit()) {
+                <span class="text-caption text-on-surface-variant flex items-center gap-1.5">
+                  <app-material-icon name="visibility" [size]="16" />
+                  Solo lectura
+                </span>
+              } @else if (!editing()) {
                 <button
                   type="button"
                   [class]="btn + ' bg-transparent text-on-surface hover:bg-surface-container'"
@@ -471,6 +478,7 @@ export class CaseProfileTab {
   /** true mientras hay una revisión sin guardar (para avisar al salir de la pestaña). */
   readonly editingChange = output<boolean>();
 
+  readonly canEdit = inject(AuthService).canEdit;
   readonly btn = BTN;
   readonly diagnosticoColumns = DIAGNOSTICO_COLUMNS;
   readonly tecnologiaColumns = TECNOLOGIA_COLUMNS;

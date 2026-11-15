@@ -23,6 +23,7 @@ import type {
   Parte,
   ResponseMedium,
 } from '../../../../core/api/types';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import {
   formatBogotaDateTime,
@@ -77,6 +78,7 @@ import { ReviewAlertBanner } from '../review-alert-banner/review-alert-banner';
         [fileSizeBytes]="fileSizeBytes()"
         [dirty]="dirty()"
         [saving]="saving()"
+        [canEdit]="canEdit()"
         (confirm)="onConfirm()"
         (viewCase)="goCase()"
         (recordResponse)="responseOpen.set(true)"
@@ -122,6 +124,8 @@ import { ReviewAlertBanner } from '../review-alert-banner/review-alert-banner';
           }
 
           @if (d.document_status === 'extracted' && form(); as f) {
+            <!-- Solo lectura (auxiliar): el fieldset desactiva todos los controles del formulario. -->
+            <fieldset class="contents" [disabled]="!canEdit()">
             <app-extracted-data-form
               [doc]="d"
               [form]="f"
@@ -140,14 +144,17 @@ import { ReviewAlertBanner } from '../review-alert-banner/review-alert-banner';
               (draftRadicadoChange)="onFormPatch({ radicadoDisplay: $event })"
               (saveRadicado)="onConfirm()"
             />
+            </fieldset>
 
-            <app-review-action-bar
-              [dirty]="dirty()"
-              [saving]="saving()"
-              [extractorVersion]="d.extractor_version"
-              (confirm)="onConfirm()"
-              (discard)="onDiscard()"
-            />
+            @if (canEdit()) {
+              <app-review-action-bar
+                [dirty]="dirty()"
+                [saving]="saving()"
+                [extractorVersion]="d.extractor_version"
+                (confirm)="onConfirm()"
+                (discard)="onDiscard()"
+              />
+            }
           }
         </section>
       </div>
@@ -164,6 +171,7 @@ import { ReviewAlertBanner } from '../review-alert-banner/review-alert-banner';
 export class DocumentReview {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  readonly canEdit = inject(AuthService).canEdit;
 
   readonly doc = input.required<DocumentDetail>();
   readonly caso = input<CaseDetail | null>(null);

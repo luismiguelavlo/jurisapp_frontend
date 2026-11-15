@@ -77,6 +77,7 @@ export class DashboardTopbar implements OnInit {
     owner: 'Propietario',
     admin: 'Administrador',
     member: 'Miembro',
+    auxiliar: 'Auxiliar',
   };
 
   readonly unread = signal(0);

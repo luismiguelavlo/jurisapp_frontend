@@ -132,18 +132,20 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
           }
         </div>
 
-        <footer class="p-4 border-t border-outline-variant/30 shrink-0">
-          <p class="font-caption text-caption text-on-surface-variant m-0 mb-2">
-            Asignar a un proceso
-          </p>
-          <button
-            type="button"
-            class="w-full bg-primary-container text-on-primary px-3 py-2 rounded-lg font-label-default text-label-default border-0 cursor-pointer"
-            (click)="assign.emit()"
-          >
-            Asignar a proceso
-          </button>
-        </footer>
+        @if (canEdit()) {
+          <footer class="p-4 border-t border-outline-variant/30 shrink-0">
+            <p class="font-caption text-caption text-on-surface-variant m-0 mb-2">
+              Asignar a un proceso
+            </p>
+            <button
+              type="button"
+              class="w-full bg-primary-container text-on-primary px-3 py-2 rounded-lg font-label-default text-label-default border-0 cursor-pointer"
+              (click)="assign.emit()"
+            >
+              Asignar a proceso
+            </button>
+          </footer>
+        }
       </aside>
     </div>
   `,
@@ -152,6 +154,7 @@ export class UnassignedMessageDrawer {
   readonly row = input.required<UnassignedMessage>();
   readonly message = input<MessageDetail | null>(null);
   readonly loading = input(false);
+  readonly canEdit = input(true);
   readonly error = input<string | null>(null);
   readonly close = output<void>();
   readonly assign = output<void>();

@@ -94,7 +94,7 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
               <app-material-icon name="folder_open" [size]="16" />
               <span>Ver caso</span>
             </button>
-            @if (canRecordResponse()) {
+            @if (canEdit() && canRecordResponse()) {
               <button
                 type="button"
                 class="h-9 px-3 rounded-[6px] bg-surface-container text-on-surface-variant text-label-default hover:bg-surface-container-high transition-colors flex items-center gap-1 border-0 cursor-pointer"
@@ -104,7 +104,7 @@ import { MaterialIcon } from '../../../../shared/components/material-icon/materi
                 <span>Registrar respuesta</span>
               </button>
             }
-            @if (doc().document_status === 'extracted') {
+            @if (canEdit() && doc().document_status === 'extracted') {
               <button
                 type="button"
                 class="h-9 px-3.5 rounded-[6px] bg-primary text-on-primary text-label-default font-medium hover:bg-primary-container transition-colors shadow-sm flex items-center gap-1.5 border-0 cursor-pointer disabled:opacity-60"
@@ -133,6 +133,8 @@ export class ProvidenciaHeader {
   readonly fileSizeBytes = input<number | null>(null);
   readonly dirty = input(false);
   readonly saving = input(false);
+  /** false en roles de solo lectura: oculta confirmar y registrar respuesta. */
+  readonly canEdit = input(true);
 
   readonly confirm = output<void>();
   readonly viewCase = output<void>();

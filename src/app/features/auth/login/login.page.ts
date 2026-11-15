@@ -76,7 +76,7 @@ export class LoginPage {
 
     try {
       const mustChange = await this.auth.login(credentials.tenant, credentials.email, credentials.password);
-      await this.router.navigateByUrl(mustChange ? PASSWORD_CHANGE_PATH : '/conexiones');
+      await this.router.navigateByUrl(mustChange ? PASSWORD_CHANGE_PATH : this.auth.homePath());
     } catch (error) {
       const mapped = this.auth.mapLoginError(error);
       if (mapped.kind === 'invalid') {

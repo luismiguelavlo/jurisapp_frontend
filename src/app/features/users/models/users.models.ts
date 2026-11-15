@@ -35,12 +35,14 @@ export const ROLE_LABEL: Record<UserRole, string> = {
   owner: 'Propietario',
   admin: 'Administrador',
   member: 'Miembro',
+  auxiliar: 'Auxiliar',
 };
 
 export const ROLE_HELP: Record<UserRole, string> = {
   owner: 'Todo lo de un administrador, y además puede nombrar a otros propietarios.',
   admin: 'Gestiona usuarios, buzones y la configuración de la entidad.',
   member: 'Revisa la bandeja y trabaja los procesos. No gestiona usuarios.',
+  auxiliar: 'Solo consulta los correos que se le asignan y sus procesos. No puede modificar nada.',
 };
 
 export const STATUS_LABEL: Record<MembershipStatus, string> = {
@@ -49,28 +51,18 @@ export const STATUS_LABEL: Record<MembershipStatus, string> = {
   removed: 'Eliminado',
 };
 
-export function displayName(u: { first_name: string | null; last_name: string | null; email: string }): string {
-  const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
-  return name || u.email;
-}
+export { displayName, initials } from '../../../core/utils/person-name';
 
-export function initials(u: { first_name: string | null; last_name: string | null; email: string }): string {
-  const a = u.first_name?.trim()[0];
-  const b = u.last_name?.trim()[0];
-  if (a || b) return `${a ?? ''}${b ?? ''}`.toUpperCase();
-  return u.email[0]?.toUpperCase() ?? '?';
-}
-
-/** Owner puede todo; admin solo sobre admin y member; nadie sobre sí mismo. */
+/** Owner puede todo; admin solo sobre admin, member y auxiliar; nadie sobre sí mismo. */
 export function canActOn(actorRole: UserRole | null, actorId: string | null, target: TenantMember): boolean {
-  if (!actorRole || actorRole === 'member') return false;
+  if (actorRole !== 'owner' && actorRole !== 'admin') return false;
   if (target.id === actorId) return false;
   if (actorRole === 'admin' && target.role === 'owner') return false;
   return true;
 }
 
 export function grantableRoles(actorRole: UserRole | null): UserRole[] {
-  return actorRole === 'owner' ? ['member', 'admin', 'owner'] : ['member', 'admin'];
+  return actorRole === 'owner' ? ['auxiliar', 'member', 'admin', 'owner'] : ['auxiliar', 'member', 'admin'];
 }
 
 /** "vence en 5 h" / "venció hace 1 d". */

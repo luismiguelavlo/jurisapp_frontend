@@ -17,6 +17,7 @@ const member = (over: Partial<TenantMember> = {}): TenantMember => ({
   status_changed_by: null,
   created_at: null,
   updated_at: null,
+  receives_assignments: false,
   ...over,
 });
 
@@ -37,6 +38,13 @@ describe('users.models', () => {
     expect(canActOn('owner', 'x', owner)).toBe(true);
     // Nadie se modifica a sí mismo por /users/{id}.
     expect(canActOn('owner', 'o', owner)).toBe(false);
+  });
+
+  it('el auxiliar no gestiona a nadie y el admin sí gestiona auxiliares (SPEC 23)', () => {
+    const aux = member({ id: 'x2', role: 'auxiliar' });
+    expect(canActOn('auxiliar', 'x', member())).toBe(false);
+    expect(canActOn('admin', 'a', aux)).toBe(true);
+    expect(grantableRoles('admin')).toContain('auxiliar');
   });
 
   it('solo el owner concede el rol owner', () => {

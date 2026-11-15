@@ -180,6 +180,7 @@ type MoveModalState =
           <section class="bg-surface-container-lowest rounded-xl shadow-sm min-w-0 overflow-hidden">
             <app-case-files-toolbar
               [canManage]="auth.canManage()"
+              [canEdit]="auth.canEdit()"
               [canUpload]="!!selectedFolderId()"
               [query]="query()"
               (newFolder)="openCreateFolder()"
@@ -198,6 +199,7 @@ type MoveModalState =
                 [folder]="selectedFolder()"
                 [query]="query()"
                 [userEmails]="userEmails()"
+                [canEdit]="auth.canEdit()"
                 (openFolder)="selectFolder($event)"
                 (openItem)="openItem($event)"
                 (uploadHere)="openUpload()"
@@ -380,6 +382,7 @@ export class CaseDetailPage implements OnInit {
   folderMenuActions(fm: FolderMenuState) {
     const folder = findFolder(this.folders(), fm.id);
     return FOLDER_MENU_ACTIONS.filter((a) => {
+      if (a.requiresEdit && !this.auth.canEdit()) return false;
       if (a.id === 'delete' && fm.origen !== 'manual') return false;
       if (a.id === 'new-subfolder' && (folder?.depth ?? 0) >= 5) return false;
       return true;
@@ -388,6 +391,7 @@ export class CaseDetailPage implements OnInit {
 
   itemMenuActions(item: CaseFolderItem) {
     return ITEM_MENU_ACTIONS.filter((a) => {
+      if (a.requiresEdit && !this.auth.canEdit()) return false;
       if (a.id === 'rename' && item.kind !== 'subido') return false;
       if (a.id === 'delete' && item.kind !== 'subido') return false;
       if (a.id === 'identify' && (item.kind !== 'adjunto' || !item.attachment_id)) return false;
@@ -455,10 +459,9 @@ export class CaseDetailPage implements OnInit {
   onFolderMenu(ev: { id: string; name: string; x: number; y: number }): void {
     this.itemMenu.set(null);
     const folder = findFolder(this.folders(), ev.id);
-    this.folderMenu.set({
-      ...ev,
-      origen: folder?.origen ?? 'manual',
-    });
+    const state: FolderMenuState = { ...ev, origen: folder?.origen ?? 'manual' };
+    // Solo lectura: si no queda ninguna acción no se abre un menú vacío.
+    this.folderMenu.set(this.folderMenuActions(state).length > 0 ? state : null);
   }
 
   onItemMenu(ev: { item: CaseFolderItem; x: number; y: number }): void {

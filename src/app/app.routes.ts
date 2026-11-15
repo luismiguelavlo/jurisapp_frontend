@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, passwordChangeGuard } from './core/guards/auth.guard';
+import { authGuard, guestGuard, notScopedGuard, passwordChangeGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -74,6 +74,7 @@ export const routes: Routes = [
       },
       {
         path: 'cases/sin-clasificar',
+        canActivate: [notScopedGuard],
         loadComponent: () =>
           import('./features/cases/unassigned.page').then((m) => m.UnassignedPage),
       },
@@ -88,6 +89,7 @@ export const routes: Routes = [
       },
       {
         path: 'conexiones',
+        canActivate: [notScopedGuard],
         loadComponent: () =>
           import('./features/mail-connections/mail-connections.page').then(
             (m) => m.MailConnectionsPage,
@@ -102,6 +104,7 @@ export const routes: Routes = [
       },
       {
         path: 'conexiones/:id',
+        canActivate: [notScopedGuard],
         loadComponent: () =>
           import('./features/mailbox-detail/mailbox-detail.page').then(
             (m) => m.MailboxDetailPage,
@@ -109,6 +112,7 @@ export const routes: Routes = [
       },
       {
         path: 'configuracion/entidad',
+        canActivate: [notScopedGuard],
         loadComponent: () =>
           import('./features/entity-settings/entity-settings.page').then(
             (m) => m.EntitySettingsPage,

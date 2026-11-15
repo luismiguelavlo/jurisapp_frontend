@@ -32,6 +32,9 @@ import { formatRadicado } from '../../../../core/utils/date-format';
           <span class="font-caption text-caption text-on-surface-variant">
             @if (canManage()) {
               Puedes organizar el expediente y usar la papelera (eliminar / restaurar).
+            } @else if (role() === 'auxiliar') {
+              Rol de solo lectura: puedes consultar el expediente, pero no subir, mover, renombrar ni
+              eliminar.
             } @else {
               Vista de permisos de rol: Member (las opciones de eliminar y el acceso a la papelera
               están ocultos automáticamente).
@@ -62,6 +65,7 @@ export class CaseRoleBanner {
     const r = this.role();
     if (r === 'owner') return 'Owner';
     if (r === 'admin') return 'Admin';
+    if (r === 'auxiliar') return 'Auxiliar';
     return 'Member';
   }
 }

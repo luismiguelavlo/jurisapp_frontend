@@ -45,6 +45,20 @@ export class AuthService {
     const role = this.role();
     return role === 'owner' || role === 'admin';
   });
+  /** Puede modificar datos del tenant. `auxiliar` es solo lectura: el backend le responde 403 en toda escritura. */
+  readonly canEdit = computed(() => {
+    const role = this.role();
+    return role !== null && role !== 'auxiliar';
+  });
+  /**
+   * SPEC 24: solo ve los correos que tiene asignados y los casos de esos correos. Dashboard, buzones y
+   * "Sin clasificar" le responden 403.
+   */
+  readonly isScoped = computed(() => this.role() === 'auxiliar');
+  /** Reasignar correos y elegir quién recibe asignaciones: owner/admin. */
+  readonly canReassign = this.canManage;
+  /** Pantalla a la que se llega tras entrar. */
+  readonly homePath = computed(() => (this.isScoped() ? '/documents' : '/conexiones'));
   readonly tenantName = computed(() => this.me()?.tenant.name ?? '');
   readonly userEmail = computed(() => this.me()?.email ?? '');
   /** "Nombre Apellido", o el correo si no hay nombre. */

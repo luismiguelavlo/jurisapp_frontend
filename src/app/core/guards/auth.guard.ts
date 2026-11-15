@@ -29,7 +29,7 @@ export const guestGuard: CanActivateFn = async () => {
   await ensureReady(auth);
 
   if (auth.me()) {
-    return router.createUrlTree([auth.passwordChangeRequired() ? PASSWORD_CHANGE_PATH : '/conexiones']);
+    return router.createUrlTree([auth.passwordChangeRequired() ? PASSWORD_CHANGE_PATH : auth.homePath()]);
   }
   return true;
 };
@@ -47,4 +47,12 @@ export const passwordChangeGuard: CanActivateFn = async () => {
     return router.createUrlTree(['/documents']);
   }
   return true;
+};
+
+/** Vistas de todo el tenant (buzones, "Sin clasificar", entidad): el auxiliar vuelve a su bandeja (SPEC 24). */
+export const notScopedGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  await ensureReady(auth);
+  return auth.isScoped() ? router.createUrlTree(['/documents']) : true;
 };

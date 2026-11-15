@@ -59,7 +59,7 @@ interface LoadedPdf {
                 {{ tipo(d.attachment_id) }} · {{ d.page_count ?? '—' }} pág. · {{ size(d.attachment_id) }}
               </span>
             </div>
-            @if (d.respuesta_estado === 'pendiente' || d.respuesta_estado === 'vencido_sin_respuesta') {
+            @if (canRespond() && (d.respuesta_estado === 'pendiente' || d.respuesta_estado === 'vencido_sin_respuesta')) {
               <button
                 type="button"
                 class="shrink-0 h-7 px-2 rounded-md border border-outline-variant bg-transparent text-caption text-on-surface cursor-pointer hover:bg-surface-container"
@@ -122,6 +122,8 @@ export class MessageDocumentsPanel {
   readonly rawMessage = input<MessageDetail | null>(null);
   readonly selectedId = input<string | null>(null);
   readonly page = input(1);
+  /** false en roles de solo lectura: oculta "Registrar respuesta". */
+  readonly canRespond = input(true);
 
   readonly selectDoc = output<string>();
   readonly pageChange = output<number>();

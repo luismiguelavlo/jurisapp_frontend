@@ -82,13 +82,15 @@ const COURT_DOMAINS = ['ramajudicial.gov.co', 'notificacionesjudiciales.gov.co']
                   }
                 </td>
                 <td class="py-3 px-4 text-right">
-                  <button
-                    type="button"
-                    class="font-label-compact text-label-compact text-primary-container border-0 bg-transparent cursor-pointer"
-                    (click)="assign.emit(item); $event.stopPropagation()"
-                  >
-                    Asignar a proceso
-                  </button>
+                  @if (canEdit()) {
+                    <button
+                      type="button"
+                      class="font-label-compact text-label-compact text-primary-container border-0 bg-transparent cursor-pointer"
+                      (click)="assign.emit(item); $event.stopPropagation()"
+                    >
+                      Asignar a proceso
+                    </button>
+                  }
                 </td>
               </tr>
             }
@@ -117,6 +119,7 @@ export class UnassignedTable {
   readonly query = input('');
   readonly hasMore = input(false);
   readonly loadingMore = input(false);
+  readonly canEdit = input(true);
   readonly queryChange = output<string>();
   readonly open = output<UnassignedMessage>();
   readonly assign = output<UnassignedMessage>();

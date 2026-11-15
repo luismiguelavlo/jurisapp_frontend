@@ -1,4 +1,4 @@
-export type Role = 'owner' | 'admin' | 'member';
+export type Role = 'owner' | 'admin' | 'member' | 'auxiliar';
 export type ProviderId = 'microsoft_graph' | 'gmail' | 'imap';
 export type ConnectionStatus =
   | 'pending'
@@ -250,6 +250,8 @@ export interface TenantUser {
   status_changed_by: string | null;
   created_at: string | null;
   updated_at: string | null;
+  /** SPEC 24: entra en el reparto automático de correos. Visible para todos los roles. */
+  receives_assignments: boolean;
 }
 
 export interface TenantUserPatch {
@@ -259,6 +261,40 @@ export interface TenantUserPatch {
   job_title?: string | null;
   role?: Role;
   status?: 'active' | 'suspended';
+  /** SPEC 24. No admite null. */
+  receives_assignments?: boolean;
+}
+
+// —— Asignación de correos (SPEC 24, docs/integracion-asignacion-correos.md) ——
+
+export type AssignmentOrigin = 'automatica' | 'manual';
+
+/** A quién está asignado el correo y desde cuándo. */
+export interface MessageAssignment {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  /** Fecha de la asignación VIGENTE: una reasignación la cambia. */
+  asignado_at: string;
+  origen: AssignmentOrigin;
+  /** Quien reasignó a mano; null en las automáticas. */
+  asignado_por: string | null;
+}
+
+/** GET /assignments/workload. */
+export interface AssigneeWorkload {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  role: Role;
+  status: MembershipStatus;
+  receives_assignments: boolean;
+  /** Sin revisar: lo que equilibra el reparto. */
+  pendientes: number;
+  total: number;
+  ultima_asignacion_at: string | null;
 }
 
 export interface Invitation {
@@ -484,6 +520,12 @@ export interface DocumentFilters {
   review_status?: ReviewStatus;
   confianza_baja?: boolean;
   sugerido_ia?: boolean;
+}
+
+/** Filtros de GET /messages: los de /documents más los de asignación (SPEC 24; el auxiliar no los usa). */
+export interface InboxFilters extends DocumentFilters {
+  asignado_a?: string;
+  sin_asignar?: boolean;
 }
 
 export type Confianza = 'alta' | 'media' | 'baja';
@@ -967,6 +1009,8 @@ export interface InboxMessage {
   proximo_vencimiento: string | null;
   sugerido_ia: boolean;
   documentos: InboxDocumentSummary[];
+  /** SPEC 24: revisor asignado y desde cuándo; null = sin asignar. */
+  asignacion: MessageAssignment | null;
 }
 
 export interface InboxMessagePage {

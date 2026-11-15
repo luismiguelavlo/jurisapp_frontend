@@ -51,6 +51,7 @@ const texts: Record<string, string> = {
   entity_name_limit_reached: 'Llegaste al máximo de 20 nombres.',
   role_not_allowed: 'No tienes permiso sobre ese rol.',
   cannot_modify_self: 'Tus propios datos se cambian desde Mi perfil.',
+  assignee_not_found: 'Ese usuario ya no está activo. Elige otro.',
   user_already_member: 'Esa persona ya es usuaria de la entidad.',
   invitation_already_pending: 'Ya tiene una invitación sin aceptar.',
   invitation_not_pending: 'La invitación ya fue aceptada o anulada. Recarga la lista.',

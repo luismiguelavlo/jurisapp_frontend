@@ -45,6 +45,8 @@ export interface ContextMenuAction<T extends string> {
   icon: string;
   tone?: 'default' | 'primary' | 'error';
   requiresAdmin?: boolean;
+  /** Oculta la acción a roles de solo lectura (auxiliar). */
+  requiresEdit?: boolean;
 }
 
 export interface FlatFolderRow {
@@ -112,10 +114,10 @@ export function radicadoSourceLabel(source: string | null | undefined): string {
 }
 
 export const FOLDER_MENU_ACTIONS: ReadonlyArray<ContextMenuAction<FolderMenuActionId>> = [
-  { id: 'new-subfolder', label: 'Nueva subcarpeta', icon: 'create_new_folder', tone: 'primary' },
-  { id: 'rename', label: 'Renombrar', icon: 'edit' },
-  { id: 'move', label: 'Mover a…', icon: 'drive_file_move' },
-  { id: 'upload', label: 'Subir archivo aquí', icon: 'upload_file', tone: 'primary' },
+  { id: 'new-subfolder', label: 'Nueva subcarpeta', icon: 'create_new_folder', tone: 'primary', requiresEdit: true },
+  { id: 'rename', label: 'Renombrar', icon: 'edit', requiresEdit: true },
+  { id: 'move', label: 'Mover a…', icon: 'drive_file_move', requiresEdit: true },
+  { id: 'upload', label: 'Subir archivo aquí', icon: 'upload_file', tone: 'primary', requiresEdit: true },
   { id: 'delete', label: 'Eliminar', icon: 'delete', tone: 'error', requiresAdmin: true },
 ];
 
@@ -123,7 +125,7 @@ export const ITEM_MENU_ACTIONS: ReadonlyArray<ContextMenuAction<ItemMenuActionId
   { id: 'open', label: 'Abrir', icon: 'visibility', tone: 'primary' },
   { id: 'download', label: 'Descargar', icon: 'download' },
   { id: 'identify', label: 'Ver identificación', icon: 'fact_check' },
-  { id: 'move', label: 'Mover a…', icon: 'drive_file_move' },
-  { id: 'rename', label: 'Renombrar', icon: 'edit' },
+  { id: 'move', label: 'Mover a…', icon: 'drive_file_move', requiresEdit: true },
+  { id: 'rename', label: 'Renombrar', icon: 'edit', requiresEdit: true },
   { id: 'delete', label: 'Eliminar', icon: 'delete', tone: 'error', requiresAdmin: true },
 ];

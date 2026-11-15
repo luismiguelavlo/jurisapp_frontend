@@ -4,14 +4,15 @@ import { radicadoSourceLabel } from '../../../../core/api/document-labels';
 import type { EmailConnection, InboxMessage } from '../../../../core/api/types';
 import { formatBogotaDateTime, relativeFromNow } from '../../../../core/utils/date-format';
 import { AlertBanner } from '../../../../shared/components/alert-banner/alert-banner';
+import { AssigneeChip } from '../../../../shared/components/assignee-chip/assignee-chip';
 import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
 import { RadicadoMark } from '../../../../shared/components/radicado-mark/radicado-mark';
 
-/** Cabecera del correo: origen, caso asignado (o acción para asignarlo) y aviso de conflicto. */
+/** Cabecera del correo: origen, revisor asignado (SPEC 24), caso asignado (o acción para asignarlo) y aviso de conflicto. */
 @Component({
   selector: 'app-message-detail-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MaterialIcon, RadicadoMark, AlertBanner],
+  imports: [RouterLink, MaterialIcon, RadicadoMark, AlertBanner, AssigneeChip],
   template: `
     @let m = message();
     <header class="bg-surface-container-lowest rounded-xl shadow-sm px-5 sm:px-6 py-5 flex flex-col gap-4">
@@ -51,7 +52,32 @@ import { RadicadoMark } from '../../../../shared/components/radicado-mark/radica
           </p>
         </div>
 
-        <div class="flex flex-col items-start lg:items-end gap-1 shrink-0">
+        <div class="flex flex-col sm:flex-row items-start gap-6 shrink-0">
+        <div class="flex flex-col items-start lg:items-end gap-1">
+          <span class="text-caption text-on-surface-variant">Revisor</span>
+          <app-assignee-chip
+            [assignment]="m.asignacion"
+            [compact]="false"
+            [reassignedBy]="reassignedBy()"
+          />
+          @if (m.asignacion; as a) {
+            <span class="text-caption text-on-surface-variant" [title]="formatBogotaDateTime(a.asignado_at)">
+              {{ a.origen === 'automatica' ? 'Reparto automático' : 'Reasignado' + (reassignedBy() ? ' por ' + reassignedBy() : '') }}
+              · {{ formatBogotaDateTime(a.asignado_at) }}
+            </span>
+          }
+          @if (canReassign()) {
+            <button
+              type="button"
+              class="mt-1 inline-flex items-center gap-1.5 h-8 px-3 rounded-[4px] border border-outline-variant bg-transparent text-label-compact text-on-surface cursor-pointer hover:bg-surface-container-low"
+              (click)="reassign.emit()"
+            >
+              <app-material-icon name="person_edit" [size]="15" />
+              {{ m.asignacion ? 'Reasignar' : 'Asignar revisor' }}
+            </button>
+          }
+        </div>
+        <div class="flex flex-col items-start lg:items-end gap-1">
           <span class="text-caption text-on-surface-variant">Proceso</span>
           @if (m.caso.case_id && m.caso.radicado) {
             <a
@@ -79,6 +105,7 @@ import { RadicadoMark } from '../../../../shared/components/radicado-mark/radica
             </button>
           }
         </div>
+        </div>
       </div>
 
       @if (m.caso.radicado_conflicto) {
@@ -97,8 +124,13 @@ export class MessageDetailHeader {
   readonly message = input.required<InboxMessage>();
   readonly connection = input<EmailConnection | null>(null);
   readonly canAssign = input(true);
+  /** SPEC 24: owner/admin reasignan el revisor. */
+  readonly canReassign = input(false);
+  /** Nombre de quien reasignó (ya resuelto). */
+  readonly reassignedBy = input<string | null>(null);
   readonly back = output<void>();
   readonly assign = output<void>();
+  readonly reassign = output<void>();
 
   readonly received = computed(() => {
     const iso = this.message().correo.recibido_at;

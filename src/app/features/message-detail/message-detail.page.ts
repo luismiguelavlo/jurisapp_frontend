@@ -20,8 +20,11 @@ import type {
   MessageDetail,
   ResponseMedium,
 } from '../../core/api/types';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UnassignedService } from '../../core/services/unassigned.service';
+import { UserDirectoryService } from '../../core/services/user-directory.service';
+import { displayName } from '../../core/utils/person-name';
 import { formatRadicado } from '../../core/utils/date-format';
 import { radicadoSourceLabel } from '../../core/api/document-labels';
 import { AssignCaseModal } from '../cases/components/assign-case-modal/assign-case-modal';
@@ -30,6 +33,7 @@ import { MessageDocumentsPanel } from '../message-ficha/components/message-docum
 import type { DocumentPageRef } from '../message-ficha/ficha-ui';
 import { MessageFicha } from '../message-ficha/message-ficha';
 import { MessageDetailHeader } from './components/message-detail-header/message-detail-header';
+import { ReassignMessageDialog } from './components/reassign-message-dialog/reassign-message-dialog';
 
 const POLL_MS = 5000;
 const POLL_MAX = 60;
@@ -42,7 +46,14 @@ const POLL_MAX = 60;
 @Component({
   selector: 'app-message-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MessageDetailHeader, MessageFicha, MessageDocumentsPanel, AssignCaseModal, RecordResponseModal],
+  imports: [
+    MessageDetailHeader,
+    MessageFicha,
+    MessageDocumentsPanel,
+    AssignCaseModal,
+    RecordResponseModal,
+    ReassignMessageDialog,
+  ],
   template: `
     <div
       class="max-w-[1480px] w-full mx-auto px-margin-tablet lg:px-margin-desktop py-space-md flex flex-col gap-space-md"
@@ -64,8 +75,12 @@ const POLL_MAX = 60;
         <app-message-detail-header
           [message]="m"
           [connection]="connection()"
+          [canAssign]="auth.canEdit()"
+          [canReassign]="auth.canReassign()"
+          [reassignedBy]="reassignedBy()"
           (back)="goInbox()"
           (assign)="assignOpen.set(true)"
+          (reassign)="openReassign()"
         />
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-md items-start">
@@ -76,6 +91,7 @@ const POLL_MAX = 60;
               [recibidoAt]="m.correo.recibido_at"
               [remitente]="m.correo.remitente"
               [saving]="saving()"
+              [readOnly]="!auth.canEdit()"
               (save)="onSave($event)"
               (reanalyze)="onReanalyze()"
               (openPage)="openPage($event)"
@@ -89,6 +105,7 @@ const POLL_MAX = 60;
                 [rawMessage]="rawMessage()"
                 [selectedId]="selectedId()"
                 [page]="page()"
+                [canRespond]="auth.canEdit()"
                 (selectDoc)="selectDoc($event)"
                 (pageChange)="page.set($event)"
                 (recordResponse)="responseFor.set($event)"
@@ -118,6 +135,18 @@ const POLL_MAX = 60;
       />
     }
 
+    @if (reassignOpen() && message(); as m) {
+      <app-reassign-message-dialog
+        [users]="directory.active()"
+        [current]="m.asignacion"
+        [subtitle]="assignSubtitle()"
+        [error]="reassignError()"
+        [submitting]="reassignBusy()"
+        (cancel)="reassignOpen.set(false); reassignError.set(null)"
+        (confirm)="submitReassign($event)"
+      />
+    }
+
     @if (responseFor()) {
       <app-record-response-modal (cancel)="responseFor.set(null)" (save)="onRecordResponse($event)" />
     }
@@ -128,6 +157,8 @@ export class MessageDetailPage implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly unassigned = inject(UnassignedService);
+  readonly auth = inject(AuthService);
+  readonly directory = inject(UserDirectoryService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly ficha = viewChild(MessageFicha);
 
@@ -147,6 +178,16 @@ export class MessageDetailPage implements OnInit {
   readonly assignOpen = signal(false);
   readonly assignError = signal<string | null>(null);
   readonly assignBusy = signal(false);
+
+  readonly reassignOpen = signal(false);
+  readonly reassignError = signal<string | null>(null);
+  readonly reassignBusy = signal(false);
+
+  /** Nombre de quien reasignó el correo a mano. */
+  readonly reassignedBy = computed(() => {
+    const by = this.message()?.asignacion?.asignado_por;
+    return by ? (this.directory.names().get(by) ?? null) : null;
+  });
 
   private messageId = '';
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -170,6 +211,35 @@ export class MessageDetailPage implements OnInit {
       void this.reload();
     });
     this.destroyRef.onDestroy(() => this.stopPoll());
+    void this.directory.ensureLoaded();
+  }
+
+  openReassign(): void {
+    this.reassignError.set(null);
+    this.reassignOpen.set(true);
+    void this.directory.refresh();
+  }
+
+  async submitReassign(userId: string): Promise<void> {
+    this.reassignBusy.set(true);
+    this.reassignError.set(null);
+    try {
+      const updated = await inboxApi.assign(this.messageId, userId);
+      this.apply(updated);
+      this.reassignOpen.set(false);
+      const a = updated.asignacion;
+      this.toast.push({
+        type: 'success',
+        title: a ? `Correo asignado a ${displayName(a)}` : 'Correo asignado',
+        description: '',
+      });
+    } catch (e) {
+      const code = e instanceof ApiError ? e.code : null;
+      if (code === 'assignee_not_found') void this.directory.refresh();
+      this.reassignError.set(errorText(code));
+    } finally {
+      this.reassignBusy.set(false);
+    }
   }
 
   async reload(silent = false): Promise<void> {
@@ -295,7 +365,8 @@ export class MessageDetailPage implements OnInit {
   private async loadContext(m: InboxMessageDetail): Promise<void> {
     if (this.connection() && this.rawMessage()) return;
     const [conn, raw] = await Promise.all([
-      integrationsApi.get(m.connection_id).catch(() => null),
+      // El auxiliar no ve los buzones (403, SPEC 24); sí el detalle de su correo.
+      this.auth.isScoped() ? Promise.resolve(null) : integrationsApi.get(m.connection_id).catch(() => null),
       integrationsApi.message(m.connection_id, m.message_id).catch(() => null),
     ]);
     this.connection.set(conn);
@@ -321,7 +392,12 @@ export class MessageDetailPage implements OnInit {
   }
 
   private notFound(): void {
-    this.toast.push({ type: 'error', title: 'Correo no encontrado', description: '' });
+    // Un auxiliar recibe 404 en un correo que ya no tiene asignado (SPEC 24).
+    this.toast.push(
+      this.auth.isScoped()
+        ? { type: 'error', title: 'Este correo no está asignado a ti', description: 'Puede que lo hayan reasignado.' }
+        : { type: 'error', title: 'Correo no encontrado', description: '' },
+    );
     void this.router.navigate(['/documents'], { replaceUrl: true });
   }
 }

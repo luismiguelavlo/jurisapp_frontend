@@ -209,8 +209,8 @@ export const documentsApi = {
 
 /** Bandeja por correo: una fila por correo con todos sus documentos. */
 export const inboxApi = {
-  /** Mismos filtros que /documents: el correo sale si alguno de sus documentos cumple. */
-  list: (filters: T.DocumentFilters = {}, cursor?: string | null, limit = 50) => {
+  /** Mismos filtros que /documents (más los de asignación): el correo sale si alguno de sus documentos cumple. */
+  list: (filters: T.InboxFilters = {}, cursor?: string | null, limit = 50) => {
     const q = new URLSearchParams({ limit: String(limit) });
     for (const [k, v] of Object.entries(filters)) {
       if (v !== undefined && v !== null) q.set(k, String(v));
@@ -228,6 +228,17 @@ export const inboxApi = {
   /** Pide de nuevo el análisis (lo hace el worker en segundo plano). */
   reanalyze: (messageId: string) =>
     api<T.InboxMessageDetail>(`/messages/${messageId}/analysis/retry`, post()),
+  /** SPEC 24 (owner/admin): asigna o reasigna el correo. 422 assignee_not_found = usuario no activo. */
+  assign: (messageId: string, userId: string) =>
+    api<T.InboxMessageDetail>(`/messages/${messageId}/assignment`, {
+      method: 'PUT',
+      body: JSON.stringify({ user_id: userId }),
+    }),
+};
+
+/** SPEC 24: carga de los revisores (owner/admin/member; 403 para auxiliar). */
+export const assignmentsApi = {
+  workload: () => api<T.AssigneeWorkload[]>('/assignments/workload'),
 };
 
 export const alertsApi = {

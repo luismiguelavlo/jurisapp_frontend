@@ -51,7 +51,11 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
             }
           </p>
         </div>
-        @if (draft()) {
+        @if (readOnly()) {
+          <span class="text-caption text-on-surface-variant inline-flex items-center gap-1.5">
+            <app-material-icon name="visibility" [size]="16" /> Solo lectura
+          </span>
+        } @else if (draft()) {
           <div class="flex items-center gap-2">
             @if (editing()) {
               <button
@@ -102,17 +106,21 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
           @case ('fallido') {
             <app-alert-banner variant="warning" title="No se pudo analizar el correo">
               {{ errorLabel() }}
-              <button type="button" class="ml-2 underline border-0 bg-transparent cursor-pointer text-inherit" (click)="reanalyze.emit()">
-                Reanalizar
-              </button>
+              @if (!readOnly()) {
+                <button type="button" class="ml-2 underline border-0 bg-transparent cursor-pointer text-inherit" (click)="reanalyze.emit()">
+                  Reanalizar
+                </button>
+              }
             </app-alert-banner>
           }
           @case ('omitido') {
             <app-alert-banner variant="warning" title="El correo no se analizó">
               {{ errorLabel() }}
-              <button type="button" class="ml-2 underline border-0 bg-transparent cursor-pointer text-inherit" (click)="reanalyze.emit()">
-                Reanalizar
-              </button>
+              @if (!readOnly()) {
+                <button type="button" class="ml-2 underline border-0 bg-transparent cursor-pointer text-inherit" (click)="reanalyze.emit()">
+                  Reanalizar
+                </button>
+              }
             </app-alert-banner>
           }
         }
@@ -143,6 +151,7 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
 
           @if (!editing()) {
             <app-ficha-resumen [ficha]="f" [state]="st" [recibidoAt]="recibidoAt()" />
+            @if (!readOnly()) {
             <div class="flex justify-end">
               <button
                 type="button"
@@ -152,6 +161,7 @@ import type { DocumentPageRef, FichaPatch } from './ficha-ui';
                 <app-material-icon name="edit" [size]="16" /> Editar datos
               </button>
             </div>
+            }
           } @else {
           <app-edit-resumen [text]="f.hechos_resumen" (patched)="patch($event)" />
           <app-edit-identificacion [ficha]="f" [recibidoAt]="recibidoAt()" (patched)="patch($event)" />
@@ -187,6 +197,8 @@ export class MessageFicha {
   /** Remitente del correo: es el correo del juzgado. */
   readonly remitente = input<string | null>(null);
   readonly saving = input(false);
+  /** Rol de solo lectura (auxiliar): sin editar, confirmar ni reanalizar. */
+  readonly readOnly = input(false);
 
   readonly save = output<MessageAnalysis>();
   readonly reanalyze = output<void>();

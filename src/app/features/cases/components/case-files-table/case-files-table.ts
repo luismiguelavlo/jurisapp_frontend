@@ -55,13 +55,15 @@ import {
               <span class="text-caption text-on-surface-variant"
                 >Radicado leído en: {{ radicadoSourceLabel(correo.radicado_source) }}</span
               >
-              <button
-                type="button"
-                class="text-label-compact text-primary border-0 bg-transparent cursor-pointer p-0 hover:underline"
-                (click)="reassign.emit()"
-              >
-                Mover a otro proceso
-              </button>
+              @if (canEdit()) {
+                <button
+                  type="button"
+                  class="text-label-compact text-primary border-0 bg-transparent cursor-pointer p-0 hover:underline"
+                  (click)="reassign.emit()"
+                >
+                  Mover a otro proceso
+                </button>
+              }
             </div>
           </div>
         }
@@ -93,7 +95,7 @@ import {
                 Esta carpeta está vacía.
               }
             </p>
-            @if (!query().trim()) {
+            @if (!query().trim() && canEdit()) {
               <button
                 type="button"
                 class="h-8 px-3 rounded-[4px] bg-primary text-on-primary hover:bg-brand-hover text-label-compact border-0 cursor-pointer flex items-center gap-1.5"
@@ -177,6 +179,7 @@ export class CaseFilesTable {
   readonly folder = input<CaseFolder | null>(null);
   readonly query = input('');
   readonly userEmails = input<ReadonlyMap<string, string>>(new Map());
+  readonly canEdit = input(true);
   readonly openFolder = output<string>();
   readonly openItem = output<CaseFolderItem>();
   readonly uploadHere = output<void>();

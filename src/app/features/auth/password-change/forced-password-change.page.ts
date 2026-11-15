@@ -76,7 +76,7 @@ export class ForcedPasswordChangePage {
       // Token restringido: sin contraseña actual. Devuelve tokens normales y quedan guardados.
       await this.auth.changePassword(pwd);
       this.toast.push({ type: 'success', title: 'Contraseña guardada', description: 'Ya puedes trabajar con normalidad.' });
-      await this.router.navigateByUrl('/conexiones');
+      await this.router.navigateByUrl(this.auth.homePath());
     } catch (e) {
       if (e instanceof ApiError && (e.code === 'password_reused' || e.code === 'weak_password')) {
         this.error.set(e.code);

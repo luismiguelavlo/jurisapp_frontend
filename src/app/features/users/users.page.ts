@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ApiError } from '../../core/api/client';
-import { usersApi } from '../../core/api/endpoints';
+import { assignmentsApi, usersApi } from '../../core/api/endpoints';
 import { errorText } from '../../core/api/errors';
+import type { AssigneeWorkload } from '../../core/api/types';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { UserDirectoryService } from '../../core/services/user-directory.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { MaterialIcon } from '../../shared/components/material-icon/material-icon';
 import { SegmentedFilter, type SegmentOption } from '../../shared/components/segmented-filter/segmented-filter';
@@ -13,6 +15,7 @@ import { InvitationsPanel } from './components/invitations-panel/invitations-pan
 import { InviteUserDialog, type InviteError } from './components/invite-user-dialog/invite-user-dialog';
 import { UsersHeader } from './components/users-header/users-header';
 import { UsersTable } from './components/users-table/users-table';
+import { AssignmentWorkloadPanel } from './components/assignment-workload-panel/assignment-workload-panel';
 import {
   displayName,
   type Invitation,
@@ -42,6 +45,7 @@ type Confirm =
     EditUserDialog,
     CredentialDialog,
     ConfirmDialog,
+    AssignmentWorkloadPanel,
   ],
   template: `
     <div class="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
@@ -79,7 +83,9 @@ type Confirm =
             [myRole]="myRole()"
             [adminView]="canManage()"
             [emptyText]="emptyText()"
+            [togglingId]="togglingId()"
             (action)="onAction($event.user, $event.action)"
+            (assignmentToggle)="setReceives($event.user, $event.on)"
           />
           }
         </div>
@@ -90,6 +96,10 @@ type Confirm =
           </p>
         }
       </section>
+
+      @if (showWorkload()) {
+        <app-assignment-workload-panel [workload]="workload()" [canManage]="canManage()" />
+      }
 
       @if (canManage() && openInvitations().length > 0) {
         <app-invitations-panel
@@ -186,6 +196,7 @@ type Confirm =
 export class UsersPage {
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
+  private readonly directory = inject(UserDirectoryService);
 
   readonly meId = this.auth.userId;
   readonly myRole = this.auth.role;
@@ -197,6 +208,10 @@ export class UsersPage {
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly busy = signal(false);
+  /** SPEC 24: carga de revisores (no la ve el auxiliar) y fila cuyo "Recibe correos" se está guardando. */
+  readonly workload = signal<AssigneeWorkload[]>([]);
+  readonly togglingId = signal<string | null>(null);
+  readonly showWorkload = computed(() => !this.auth.isScoped() && !this.loading() && !this.loadError());
 
   readonly filter = signal<MemberFilter>('current');
   readonly query = signal('');
@@ -261,6 +276,7 @@ export class UsersPage {
       ]);
       this.members.set(users);
       this.invitations.set(invitations);
+      void this.reloadWorkload();
     } catch (e) {
       this.loadError.set(e instanceof ApiError ? errorText(e.code) : 'Revisa tu conexión.');
     } finally {
@@ -375,6 +391,7 @@ export class UsersPage {
       try {
         const updated = await usersApi.update(user.id, patch);
         this.replaceMember(updated);
+        if (patch.receives_assignments !== undefined || patch.role) void this.reloadWorkload();
         this.closeEdit();
         this.toast.push({
           type: 'success',
@@ -399,10 +416,44 @@ export class UsersPage {
     });
   }
 
+  /** SPEC 24: entra o sale del reparto automático. Lo ya asignado se queda con él. */
+  async setReceives(user: TenantMember, on: boolean): Promise<void> {
+    if (this.togglingId()) return;
+    this.togglingId.set(user.id);
+    this.replaceMember({ ...user, receives_assignments: on });
+    try {
+      const updated = await usersApi.update(user.id, { receives_assignments: on });
+      this.replaceMember(updated);
+      void this.reloadWorkload();
+      this.toast.push({
+        type: 'success',
+        title: on ? 'Recibirá correos asignados' : 'Ya no recibirá correos nuevos',
+        description: on
+          ? `${displayName(updated)} entra en el reparto automático.`
+          : `${displayName(updated)} conserva los que ya tiene asignados.`,
+      });
+    } catch (e) {
+      this.replaceMember(user);
+      this.handleError(e);
+    } finally {
+      this.togglingId.set(null);
+    }
+  }
+
+  private async reloadWorkload(): Promise<void> {
+    if (this.auth.isScoped()) return;
+    try {
+      this.workload.set(await assignmentsApi.workload());
+    } catch {
+      this.workload.set([]);
+    }
+  }
+
   async setStatus(user: TenantMember, status: 'active' | 'suspended'): Promise<void> {
     await this.run(async () => {
       const updated = await usersApi.update(user.id, { status });
       this.replaceMember(updated);
+      void this.reloadWorkload();
       this.confirm.set(null);
       this.toast.push({
         type: status === 'active' ? 'success' : 'warn',
@@ -467,6 +518,8 @@ export class UsersPage {
 
   private replaceMember(u: TenantMember): void {
     this.members.update((l) => (l.some((m) => m.id === u.id) ? l.map((m) => (m.id === u.id ? u : m)) : [...l, u]));
+    // Nombres y revisores activos que usan la bandeja y el diálogo de reasignar.
+    this.directory.users.set(this.members());
   }
 
   /** Ejecuta una acción con estado ocupado; lo no manejado termina en un toast. */

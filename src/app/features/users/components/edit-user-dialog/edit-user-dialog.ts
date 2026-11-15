@@ -59,6 +59,23 @@ import { RolePicker } from '../role-picker/role-picker';
           [note]="role() !== user().role ? 'Al cambiar el rol se cierran sus sesiones abiertas: tendrá que volver a entrar.' : null"
           (valueChange)="role.set($event)"
         />
+
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            class="mt-0.5 accent-primary"
+            [checked]="receives()"
+            [disabled]="user().status !== 'active'"
+            (change)="receives.set($any($event.target).checked)"
+          />
+          <span class="flex flex-col gap-0.5">
+            <span class="text-label-compact text-on-surface">Asignarle automáticamente los correos que lleguen</span>
+            <span class="text-caption text-on-surface-variant">
+              Los correos nuevos se reparten entre los marcados, a quien tenga menos pendientes. Desmarcarlo no le
+              quita los que ya tiene.
+            </span>
+          </span>
+        </label>
       </form>
 
       <ng-container dialog-actions>
@@ -83,6 +100,7 @@ export class EditUserDialog implements OnInit {
   readonly btn = BTN;
   readonly inputClass = INPUT_CLASS;
   readonly role = signal<UserRole>('member');
+  readonly receives = signal(false);
   readonly name = computed(() => displayName(this.user()));
   readonly roles = computed(() => grantableRoles(this.myRole()));
 
@@ -95,12 +113,15 @@ export class EditUserDialog implements OnInit {
 
   readonly dirty = computed(() => {
     this.values();
+    this.role();
+    this.receives();
     return Object.keys(this.patch()).length > 0;
   });
 
   ngOnInit(): void {
     const u = this.user();
     this.role.set(u.role);
+    this.receives.set(u.receives_assignments);
     this.form.setValue({
       first_name: u.first_name ?? '',
       last_name: u.last_name ?? '',
@@ -131,6 +152,7 @@ export class EditUserDialog implements OnInit {
     }
     if (v.job_title.trim() !== (u.job_title ?? '')) p.job_title = v.job_title.trim() || null;
     if (this.role() !== u.role) p.role = this.role();
+    if (this.receives() !== u.receives_assignments) p.receives_assignments = this.receives();
     return p;
   }
 

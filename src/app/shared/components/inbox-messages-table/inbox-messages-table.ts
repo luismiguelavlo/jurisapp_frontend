@@ -13,6 +13,7 @@ import {
   relativeFromNow,
   remainingLabel,
 } from '../../../core/utils/date-format';
+import { AssigneeChip } from '../assignee-chip/assignee-chip';
 import { MaterialIcon } from '../material-icon/material-icon';
 import { RadicadoMark } from '../radicado-mark/radicado-mark';
 
@@ -23,11 +24,11 @@ import { RadicadoMark } from '../radicado-mark/radicado-mark';
 @Component({
   selector: 'app-inbox-messages-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MaterialIcon, RadicadoMark],
+  imports: [RouterLink, MaterialIcon, RadicadoMark, AssigneeChip],
   template: `
     <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[900px]">
+        <table class="w-full text-left border-collapse" [class]="showAssignee() ? 'min-w-[1060px]' : 'min-w-[900px]'">
           <thead>
             <tr class="text-caption text-on-surface-variant border-b border-outline-variant/70">
               <th class="py-2.5 pl-6 pr-4 font-medium" scope="col">Correo</th>
@@ -35,6 +36,9 @@ import { RadicadoMark } from '../radicado-mark/radicado-mark';
               <th class="py-2.5 px-4 font-medium" scope="col">Adjuntos</th>
               <th class="py-2.5 px-4 font-medium" scope="col">Estado</th>
               <th class="py-2.5 px-4 font-medium" scope="col">Vencimiento</th>
+              @if (showAssignee()) {
+                <th class="py-2.5 px-4 font-medium" scope="col">{{ assigneeHeader() }}</th>
+              }
               <th class="py-2.5 pl-4 pr-6 font-medium text-right" scope="col">Recibido</th>
             </tr>
           </thead>
@@ -138,6 +142,15 @@ import { RadicadoMark } from '../radicado-mark/radicado-mark';
                     <span class="text-body-compact text-on-surface-variant">—</span>
                   }
                 </td>
+                @if (showAssignee()) {
+                  <td class="py-3 px-4 max-w-[200px]">
+                    <app-assignee-chip
+                      [assignment]="m.asignacion"
+                      [showName]="!onlyDates()"
+                      [reassignedBy]="nameOf(m.asignacion?.asignado_por)"
+                    />
+                  </td>
+                }
                 <td class="py-3 pl-4 pr-6 text-right whitespace-nowrap">
                   <time
                     class="text-caption text-on-surface-variant"
@@ -178,6 +191,20 @@ export class InboxMessagesTable {
   readonly nextCursor = input<string | null>(null);
   readonly loadingMore = input(false);
   readonly loadMore = output<void>();
+  /** SPEC 24: columna con el revisor asignado y desde cuándo. */
+  readonly showAssignee = input(true);
+  /** Quien mira solo ve lo suyo (auxiliar): la columna muestra solo la fecha de asignación. */
+  readonly onlyDates = input(false);
+  /** user_id → nombre, para "reasignado por" (de GET /users). */
+  readonly userNames = input<ReadonlyMap<string, string>>(new Map());
+
+  assigneeHeader(): string {
+    return this.onlyDates() ? 'Asignado' : 'Asignado a';
+  }
+
+  nameOf(id: string | null | undefined): string | null {
+    return id ? (this.userNames().get(id) ?? null) : null;
+  }
 
   filenames(m: InboxMessage): string {
     return m.documentos.map((d) => d.filename).join('\n');

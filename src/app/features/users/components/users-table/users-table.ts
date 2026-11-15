@@ -21,6 +21,7 @@ import {
   type TenantMember,
   type UserRole,
 } from '../../models/users.models';
+import { AssignmentToggle } from '../assignment-toggle/assignment-toggle';
 import { UserIdentity } from '../user-identity/user-identity';
 
 interface RowAction extends RowMenuAction {
@@ -36,16 +37,19 @@ const RAIL: Record<TenantMember['status'], string> = {
 @Component({
   selector: 'app-users-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialIcon, RowMenu, UserIdentity],
+  imports: [MaterialIcon, RowMenu, UserIdentity, AssignmentToggle],
   template: `
     <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse" [class]="adminView() ? 'min-w-[820px]' : 'min-w-[560px]'">
+      <table class="w-full text-left border-collapse" [class]="adminView() ? 'min-w-[920px]' : 'min-w-[660px]'">
         <thead>
           <tr class="text-caption text-on-surface-variant border-b border-outline-variant/70">
             <th class="py-2.5 pl-6 pr-4 font-medium" scope="col">Persona</th>
             <th class="py-2.5 px-4 font-medium" scope="col">Cargo</th>
             <th class="py-2.5 px-4 font-medium" scope="col">Rol</th>
             <th class="py-2.5 px-4 font-medium" scope="col">Estado</th>
+            <th class="py-2.5 px-4 font-medium whitespace-nowrap" scope="col" title="Entra en el reparto automático de correos">
+              Recibe correos
+            </th>
             @if (adminView()) {
               <th class="py-2.5 px-4 font-medium whitespace-nowrap" scope="col">Último acceso</th>
               <th class="py-2.5 pl-4 pr-6" scope="col"><span class="sr-only">Acciones</span></th>
@@ -64,7 +68,7 @@ const RAIL: Record<TenantMember['status'], string> = {
               </td>
               <td class="py-3 px-4">
                 <span class="inline-flex items-center gap-1 text-body-compact" [class]="u.role === 'owner' ? 'text-primary font-medium' : 'text-on-surface'">
-                  @if (u.role !== 'member') {
+                  @if (u.role === 'owner' || u.role === 'admin') {
                     <app-material-icon [name]="u.role === 'owner' ? 'verified_user' : 'shield_person'" [size]="15" />
                   }
                   {{ roleLabel[u.role] }}
@@ -77,6 +81,16 @@ const RAIL: Record<TenantMember['status'], string> = {
                 } @else if (u.password_change_required) {
                   <span class="block text-caption text-tertiary">Contraseña temporal sin usar</span>
                 }
+              </td>
+              <td class="py-3 px-4">
+                <app-assignment-toggle
+                  [on]="u.receives_assignments"
+                  [editable]="adminView() && canAct(u) && !gone"
+                  [busy]="togglingId() === u.id"
+                  [disabledReason]="u.status === 'suspended' ? 'Está suspendido: no recibe correos hasta reactivarlo' : null"
+                  [label]="'Asignar correos automáticamente a ' + u.email"
+                  (toggle)="assignmentToggle.emit({ user: u, on: $event })"
+                />
               </td>
               @if (adminView()) {
                 <td class="py-3 px-4 whitespace-nowrap">
@@ -118,7 +132,7 @@ const RAIL: Record<TenantMember['status'], string> = {
             </tr>
           } @empty {
             <tr>
-              <td [attr.colspan]="adminView() ? 6 : 4" class="px-6 py-8 text-body-compact text-on-surface-variant">
+              <td [attr.colspan]="adminView() ? 7 : 5" class="px-6 py-8 text-body-compact text-on-surface-variant">
                 {{ emptyText() }}
               </td>
             </tr>
@@ -146,6 +160,9 @@ export class UsersTable {
   readonly adminView = input(false);
   readonly emptyText = input('No hay usuarios con este filtro.');
   readonly action = output<{ user: TenantMember; action: MemberAction }>();
+  /** SPEC 24: activar/desactivar "Recibe correos". */
+  readonly assignmentToggle = output<{ user: TenantMember; on: boolean }>();
+  readonly togglingId = input<string | null>(null);
 
   readonly menu = signal<{ user: TenantMember; actions: RowAction[]; top: number; left: number } | null>(null);
 

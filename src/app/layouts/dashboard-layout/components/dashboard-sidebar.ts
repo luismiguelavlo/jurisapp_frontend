@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 import { UnassignedService } from '../../../core/services/unassigned.service';
 import { AppLogo } from '../../../shared/components/app-logo/app-logo';
 import { MaterialIcon } from '../../../shared/components/material-icon/material-icon';
@@ -12,6 +13,10 @@ interface NavItem {
   child?: boolean;
   exact?: boolean;
   badge?: 'unassigned';
+  /** Vista de todo el tenant: el auxiliar no la ve (SPEC 24). */
+  notScoped?: boolean;
+  /** Etiqueta para el auxiliar. */
+  scopedLabel?: string;
 }
 
 interface NavGroup {
@@ -23,16 +28,21 @@ const NAV: NavGroup[] = [
   {
     label: 'Trabajo diario',
     items: [
-      { link: '/documents', label: 'Bandeja de correos electrónicos', icon: 'move_to_inbox' },
+      {
+        link: '/documents',
+        label: 'Bandeja de correos electrónicos',
+        scopedLabel: 'Mis correos asignados',
+        icon: 'move_to_inbox',
+      },
       { link: '/cases', label: 'Procesos', icon: 'folder_managed', exact: false },
-      { link: '/cases/sin-clasificar', label: 'Sin clasificar', child: true, badge: 'unassigned' },
+      { link: '/cases/sin-clasificar', label: 'Sin clasificar', child: true, badge: 'unassigned', notScoped: true },
     ],
   },
   {
     label: 'Configuración',
     items: [
-      { link: '/conexiones', label: 'Conexiones de correo', icon: 'alternate_email' },
-      { link: '/configuracion/entidad', label: 'Entidad', icon: 'domain' },
+      { link: '/conexiones', label: 'Conexiones de correo', icon: 'alternate_email', notScoped: true },
+      { link: '/configuracion/entidad', label: 'Entidad', icon: 'domain', notScoped: true },
       { link: '/configuracion/usuarios', label: 'Usuarios', icon: 'group' },
     ],
   },
@@ -51,7 +61,7 @@ const NAV: NavGroup[] = [
         <app-logo size="sm" />
       </div>
       <nav class="flex flex-col gap-5 pt-3 pr-3" aria-label="Principal">
-        @for (g of nav; track g.label) {
+        @for (g of nav(); track g.label) {
           <div class="flex flex-col gap-0.5">
             <p class="m-0 mb-1 pl-4 text-caption text-on-surface-variant">{{ g.label }}</p>
             @for (it of g.items; track it.link) {
@@ -69,7 +79,7 @@ const NAV: NavGroup[] = [
                 @if (it.icon) {
                   <app-material-icon [name]="it.icon" [size]="17" />
                 }
-                <span class="flex-1">{{ it.label }}</span>
+                <span class="flex-1">{{ scoped() ? (it.scopedLabel ?? it.label) : it.label }}</span>
                 @if (it.badge === 'unassigned' && unassigned.total() > 0) {
                   <span
                     class="min-w-5 px-1.5 py-0.5 rounded-full bg-error text-on-error text-[11px] leading-none font-semibold text-center tabular-nums"
@@ -87,7 +97,13 @@ const NAV: NavGroup[] = [
 })
 export class DashboardSidebar implements OnInit {
   readonly unassigned = inject(UnassignedService);
-  readonly nav = NAV;
+  private readonly auth = inject(AuthService);
+  readonly scoped = this.auth.isScoped;
+  readonly nav = computed<NavGroup[]>(() =>
+    this.scoped()
+      ? NAV.map((g) => ({ ...g, items: g.items.filter((i) => !i.notScoped) })).filter((g) => g.items.length > 0)
+      : NAV,
+  );
 
   ngOnInit(): void {
     void this.unassigned.refresh();
