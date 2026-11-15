@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, guestGuard, passwordChangeGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -12,6 +12,26 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import('./features/auth/login/login.page').then((m) => m.LoginPage),
+      },
+    ],
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./layouts/auth-layout/auth-layout').then((m) => m.AuthLayout),
+    children: [
+      {
+        path: 'invitacion',
+        loadComponent: () =>
+          import('./features/auth/invitation/invitation.page').then((m) => m.InvitationPage),
+      },
+      {
+        path: 'cambiar-contrasena',
+        canActivate: [passwordChangeGuard],
+        loadComponent: () =>
+          import('./features/auth/password-change/forced-password-change.page').then(
+            (m) => m.ForcedPasswordChangePage,
+          ),
       },
     ],
   },
@@ -93,6 +113,16 @@ export const routes: Routes = [
           import('./features/entity-settings/entity-settings.page').then(
             (m) => m.EntitySettingsPage,
           ),
+      },
+      {
+        path: 'configuracion/usuarios',
+        loadComponent: () =>
+          import('./features/users/users.page').then((m) => m.UsersPage),
+      },
+      {
+        path: 'mi-perfil',
+        loadComponent: () =>
+          import('./features/profile/profile.page').then((m) => m.ProfilePage),
       },
       {
         path: 'providencias',

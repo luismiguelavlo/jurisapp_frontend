@@ -37,9 +37,11 @@ export type ErrorCode =
 
 export interface TokenResponse {
   access_token: string;
-  refresh_token: string;
+  /** null solo con password_change_required: token restringido, no renovable. */
+  refresh_token: string | null;
   token_type: 'bearer';
   expires_in: number;
+  password_change_required: boolean;
 }
 
 export interface Me {
@@ -47,6 +49,11 @@ export interface Me {
   email: string;
   tenant: { id: string; slug: string; name: string };
   role: Role;
+  first_name: string | null;
+  last_name: string | null;
+  /** Cargo en este tenant. */
+  job_title: string | null;
+  password_change_required: boolean;
 }
 
 export interface ProviderInfo {
@@ -220,12 +227,103 @@ export interface CaseDetail extends CaseSummary {
   mensajes: InboxMessage[];
 }
 
-/** GET /users — emails de uploaded_by / deleted_by / assigned_by. */
+/** SPEC 22: gestión de usuarios. */
+export type MembershipStatus = 'active' | 'suspended' | 'removed';
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'expired';
+
+/** GET /users. También resuelve emails de uploaded_by / deleted_by / assigned_by. */
 export interface TenantUser {
   id: string;
   email: string;
   role: Role;
+  /** = status === 'active'. */
   is_active: boolean;
+  first_name: string | null;
+  last_name: string | null;
+  job_title: string | null;
+  status: MembershipStatus;
+  /** Solo owner/admin; null para member. */
+  password_change_required: boolean | null;
+  last_login_at: string | null;
+  invited_by: string | null;
+  status_changed_at: string | null;
+  status_changed_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface TenantUserPatch {
+  first_name?: string;
+  last_name?: string;
+  /** null o "" borra el cargo. */
+  job_title?: string | null;
+  role?: Role;
+  status?: 'active' | 'suspended';
+}
+
+export interface Invitation {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  job_title: string | null;
+  role: Role;
+  status: InvitationStatus;
+  expires_at: string;
+  invited_by: string;
+  send_count: number;
+  last_sent_at: string;
+  accepted_at: string | null;
+  accepted_user_id: string | null;
+  revoked_at: string | null;
+  revoked_by: string | null;
+  created_at: string;
+}
+
+export interface InvitationIn {
+  email: string;
+  first_name: string;
+  last_name: string;
+  job_title?: string | null;
+  role?: Role;
+}
+
+export interface InvitationIssued {
+  invitation: Invitation;
+  /** null si el backend no tiene APP_PUBLIC_URL. */
+  invitation_url: string | null;
+  invitation_token: string;
+  email_sent: boolean;
+}
+
+export interface InvitationPreview {
+  email: string;
+  first_name: string;
+  last_name: string;
+  job_title: string | null;
+  role: Role;
+  tenant_name: string;
+  expires_at: string;
+  /** true: pedir la contraseña ACTUAL, no crear una. */
+  account_exists: boolean;
+  password_min_length: number;
+}
+
+export interface InvitationAcceptIn {
+  token: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface InvitationAcceptResult extends TokenResponse {
+  tenant_slug: string;
+}
+
+export interface TemporaryPassword {
+  /** Mostrar UNA vez. */
+  temporary_password: string;
+  expires_at: string;
 }
 
 /** Expediente SPEC 19/20 */

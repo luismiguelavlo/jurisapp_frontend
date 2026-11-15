@@ -1,33 +1,50 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService, PASSWORD_CHANGE_PATH } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = async () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
+async function ensureReady(auth: AuthService): Promise<void> {
   if (!auth.ready()) {
     await auth.bootstrap();
   }
+}
 
-  if (auth.me()) {
-    return true;
+/** Sesión completa. Con token restringido solo se puede ir a crear la contraseña nueva. */
+export const authGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  await ensureReady(auth);
+
+  if (!auth.me()) {
+    return router.createUrlTree(['/login']);
   }
-
-  return router.createUrlTree(['/login']);
+  if (auth.passwordChangeRequired()) {
+    return router.createUrlTree([PASSWORD_CHANGE_PATH]);
+  }
+  return true;
 };
 
 export const guestGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-
-  if (!auth.ready()) {
-    await auth.bootstrap();
-  }
+  await ensureReady(auth);
 
   if (auth.me()) {
-    return router.createUrlTree(['/conexiones']);
+    return router.createUrlTree([auth.passwordChangeRequired() ? PASSWORD_CHANGE_PATH : '/conexiones']);
   }
+  return true;
+};
 
+/** /cambiar-contrasena: solo quien entró con una contraseña temporal. */
+export const passwordChangeGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  await ensureReady(auth);
+
+  if (!auth.me()) {
+    return router.createUrlTree(['/login']);
+  }
+  if (!auth.passwordChangeRequired()) {
+    return router.createUrlTree(['/documents']);
+  }
   return true;
 };

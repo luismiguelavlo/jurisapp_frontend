@@ -40,15 +40,19 @@ import { MaterialIcon } from '../../../shared/components/material-icon/material-
           }
         </a>
 
-        <div class="flex items-center gap-space-xs">
-          <span class="text-body-compact text-on-surface">{{ auth.userEmail() }}</span>
+        <a
+          routerLink="/mi-perfil"
+          class="flex items-center gap-space-xs no-underline rounded-[4px] px-1.5 py-1 hover:bg-surface-container-low"
+          title="Mi perfil"
+        >
+          <span class="text-body-compact text-on-surface" [attr.title]="auth.userEmail()">{{ auth.displayName() }}</span>
           @if (auth.role(); as role) {
             <span
               class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-caption"
               >{{ roleLabel[role] }}</span
             >
           }
-        </div>
+        </a>
 
         <div class="flex items-center gap-space-xs">
           <button

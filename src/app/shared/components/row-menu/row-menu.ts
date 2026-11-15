@@ -1,9 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
-import type { MailboxMenuAction } from '../../models/mailbox.models';
+import { MaterialIcon } from '../material-icon/material-icon';
+
+export interface RowMenuAction {
+  id: string;
+  label: string;
+  icon: string;
+  tone?: 'default' | 'primary' | 'error';
+  requiresAdmin?: boolean;
+}
+
+/** Menú contextual flotante de una fila de tabla. Las acciones destructivas van tras un separador. */
 
 @Component({
-  selector: 'app-mailbox-row-menu',
+  selector: 'app-row-menu',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MaterialIcon],
   host: {
@@ -40,14 +49,14 @@ import type { MailboxMenuAction } from '../../models/mailbox.models';
     </div>
   `,
 })
-export class MailboxRowMenu {
-  readonly actions = input.required<ReadonlyArray<MailboxMenuAction>>();
+export class RowMenu {
+  readonly actions = input.required<ReadonlyArray<RowMenuAction>>();
   readonly canAdmin = input(true);
   /** Viewport Y of the menu top edge. */
   readonly top = input(0);
   /** Viewport X of the menu left edge. */
   readonly left = input(0);
-  readonly actionSelect = output<MailboxMenuAction>();
+  readonly actionSelect = output<RowMenuAction>();
 
   readonly visibleItems = computed(() => {
     const filtered = this.actions().filter(
@@ -55,7 +64,7 @@ export class MailboxRowMenu {
     );
 
     const items: Array<
-      | { kind: 'action'; action: MailboxMenuAction }
+      | { kind: 'action'; action: RowMenuAction }
       | { kind: 'divider'; id: string }
     > = [];
 

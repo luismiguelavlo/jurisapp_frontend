@@ -33,6 +33,7 @@ const NAV: NavGroup[] = [
     items: [
       { link: '/conexiones', label: 'Conexiones de correo', icon: 'alternate_email' },
       { link: '/configuracion/entidad', label: 'Entidad', icon: 'domain' },
+      { link: '/configuracion/usuarios', label: 'Usuarios', icon: 'group' },
     ],
   },
 ];

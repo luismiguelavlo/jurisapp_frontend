@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService, PASSWORD_CHANGE_PATH } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { RadicadoMark } from '../../../shared/components/radicado-mark/radicado-mark';
 import { LoginCard } from './components/login-card/login-card';
@@ -75,8 +75,8 @@ export class LoginPage {
     this.stopCountdown();
 
     try {
-      await this.auth.login(credentials.tenant, credentials.email, credentials.password);
-      await this.router.navigateByUrl('/conexiones');
+      const mustChange = await this.auth.login(credentials.tenant, credentials.email, credentials.password);
+      await this.router.navigateByUrl(mustChange ? PASSWORD_CHANGE_PATH : '/conexiones');
     } catch (error) {
       const mapped = this.auth.mapLoginError(error);
       if (mapped.kind === 'invalid') {

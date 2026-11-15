@@ -49,6 +49,24 @@ const texts: Record<string, string> = {
   invalid_entity_name: 'Ese nombre es demasiado genérico o el NIT no es válido.',
   entity_name_already_exists: 'Ese nombre ya está registrado.',
   entity_name_limit_reached: 'Llegaste al máximo de 20 nombres.',
+  role_not_allowed: 'No tienes permiso sobre ese rol.',
+  cannot_modify_self: 'Tus propios datos se cambian desde Mi perfil.',
+  user_already_member: 'Esa persona ya es usuaria de la entidad.',
+  invitation_already_pending: 'Ya tiene una invitación sin aceptar.',
+  invitation_not_pending: 'La invitación ya fue aceptada o anulada. Recarga la lista.',
+  user_removed: 'Ese usuario fue eliminado. Vuelve a invitarlo para darle acceso.',
+  user_in_other_tenants:
+    'Pertenece también a otra organización: no puedes cambiar su nombre ni su contraseña.',
+  user_not_found: 'Ese usuario ya no existe. Recarga la lista.',
+  invitation_not_found: 'Esa invitación ya no existe. Recarga la lista.',
+  invalid_invitation: 'El enlace de invitación no es válido o ya venció.',
+  invalid_email: 'El correo no es válido.',
+  invalid_name: 'Revisa el nombre y el apellido.',
+  weak_password: 'La contraseña es muy débil: usa entre 12 y 128 caracteres, con al menos 4 distintos, y que no sea tu correo.',
+  invalid_job_title: 'El cargo tiene caracteres no permitidos o es demasiado largo.',
+  password_reused: 'Ya usaste esa contraseña antes. Elige una diferente.',
+  password_change_required: 'Debes crear una contraseña nueva para continuar.',
+  validation_error: 'Revisa los datos: algún valor no es válido.',
 };
 
 export const errorText = (code: string | null | undefined): string =>

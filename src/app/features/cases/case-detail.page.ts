@@ -843,7 +843,10 @@ export class CaseDetailPage implements OnInit {
   private async loadUsers(): Promise<void> {
     try {
       const users = await authApi.users();
-      this.userEmails.set(new Map(users.map((u) => [u.id, u.email])));
+      // Nombre cuando existe; si no, el correo.
+      this.userEmails.set(
+        new Map(users.map((u) => [u.id, [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.email])),
+      );
     } catch {
       // opcional: sin emails se muestra el UUID corto
     }

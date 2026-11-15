@@ -22,10 +22,4 @@ export interface MailboxConnection {
   dimmed?: boolean;
 }
 
-export interface MailboxMenuAction {
-  id: string;
-  label: string;
-  icon: string;
-  tone?: 'default' | 'primary' | 'error';
-  requiresAdmin?: boolean;
-}
+export type { RowMenuAction as MailboxMenuAction } from '../../../shared/components/row-menu/row-menu';

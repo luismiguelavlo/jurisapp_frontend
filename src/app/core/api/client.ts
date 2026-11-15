@@ -3,10 +3,13 @@ import type { TokenResponse } from './types';
 
 const API_URL: string = environment.apiUrl;
 const REFRESH_KEY = 'salud.refresh';
+/** Token restringido (contraseña temporal): sin refresh, solo sirve para /me y /auth/password/change. */
+const RESTRICTED_KEY = 'salud.restricted';
 
 let accessToken: string | null = null;
 let refreshing: Promise<boolean> | null = null;
 let onSessionExpired: () => void = () => undefined;
+let onPasswordChangeRequired: () => void = () => undefined;
 
 export class ApiError extends Error {
   constructor(
@@ -23,10 +26,16 @@ export class ApiError extends Error {
 export function setTokens(t: TokenResponse | null): void {
   accessToken = t?.access_token ?? null;
   try {
-    if (t) {
+    if (t?.refresh_token) {
       sessionStorage.setItem(REFRESH_KEY, t.refresh_token);
+      sessionStorage.removeItem(RESTRICTED_KEY);
+    } else if (t) {
+      // Sobrevive a una recarga de la misma pestaña; al cerrarla se pierde, como pide el backend.
+      sessionStorage.removeItem(REFRESH_KEY);
+      sessionStorage.setItem(RESTRICTED_KEY, t.access_token);
     } else {
       sessionStorage.removeItem(REFRESH_KEY);
+      sessionStorage.removeItem(RESTRICTED_KEY);
     }
   } catch {
     // storage bloqueado: sesión solo en memoria
@@ -39,6 +48,25 @@ export function getRefreshToken(): string | null {
   } catch {
     return null;
   }
+}
+
+/** Recupera el token restringido tras una recarga. true si había uno. */
+export function restoreRestrictedToken(): boolean {
+  try {
+    const t = sessionStorage.getItem(RESTRICTED_KEY);
+    if (t) accessToken = t;
+    return !!t;
+  } catch {
+    return false;
+  }
+}
+
+export function hasSession(): boolean {
+  return accessToken !== null || getRefreshToken() !== null;
+}
+
+export function setOnPasswordChangeRequired(fn: () => void): void {
+  onPasswordChangeRequired = fn;
 }
 
 export function setOnSessionExpired(fn: () => void): void {
@@ -103,7 +131,11 @@ export async function api<T>(path: string, init: RequestInit = {}, retry = true)
     onSessionExpired();
   }
   if (!res.ok && res.status !== 202) {
-    throw await toError(res);
+    const err = await toError(res);
+    if (err.status === 403 && err.code === 'password_change_required') {
+      onPasswordChangeRequired();
+    }
+    throw err;
   }
   if (res.status === 204) {
     return undefined as T;

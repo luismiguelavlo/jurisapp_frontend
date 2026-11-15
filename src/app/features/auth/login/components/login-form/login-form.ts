@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { lastTenantSlug } from '../../../../../core/services/auth.service';
 import type { LoginCredentials } from '../../models/login.models';
 import { PasswordField } from '../../../../../shared/components/password-field/password-field';
 
@@ -70,7 +71,7 @@ export class LoginForm {
   readonly submitted = output<LoginCredentials>();
 
   readonly form = new FormGroup({
-    tenant: new FormControl('', {
+    tenant: new FormControl(lastTenantSlug(), {
       nonNullable: true,
       validators: [Validators.required],
     }),

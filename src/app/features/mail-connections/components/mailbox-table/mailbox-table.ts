@@ -25,13 +25,13 @@ import { formatBogotaDateTime } from '../../../../core/utils/date-format';
 import type { EmailConnection } from '../../../../core/api/types';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MaterialIcon } from '../../../../shared/components/material-icon/material-icon';
-import { MailboxRowMenu } from '../mailbox-row-menu/mailbox-row-menu';
+import { RowMenu } from '../../../../shared/components/row-menu/row-menu';
 import type { MailboxMenuAction } from '../../models/mailbox.models';
 
 @Component({
   selector: 'app-mailbox-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MaterialIcon, MailboxRowMenu, RouterLink],
+  imports: [MaterialIcon, RowMenu, RouterLink],
   template: `
     <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
       @if (mailboxes().length > 5) {
@@ -141,7 +141,7 @@ import type { MailboxMenuAction } from '../../models/mailbox.models';
       </div>
 
       @if (openMenu(); as menu) {
-        <app-mailbox-row-menu
+        <app-row-menu
           [actions]="menu.actions"
           [canAdmin]="true"
           [top]="menu.top"

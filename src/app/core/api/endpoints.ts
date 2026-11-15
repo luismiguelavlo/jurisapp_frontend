@@ -8,15 +8,14 @@ const post = (body?: unknown): RequestInit => ({
   body: body === undefined ? undefined : JSON.stringify(body),
 });
 
+const patch = (body: unknown): RequestInit => ({ method: 'PATCH', body: JSON.stringify(body) });
+
 export const authApi = {
-  async login(tenant_slug: string, email: string, password: string): Promise<void> {
-    setTokens(
-      await api<T.TokenResponse>(
-        '/auth/login',
-        post({ tenant_slug, email, password }),
-        false,
-      ),
-    );
+  /** Guarda los tokens. Con password_change_required el token es restringido. */
+  async login(tenant_slug: string, email: string, password: string): Promise<T.TokenResponse> {
+    const t = await api<T.TokenResponse>('/auth/login', post({ tenant_slug, email, password }), false);
+    setTokens(t);
+    return t;
   },
   async logout(): Promise<void> {
     const rt = getRefreshToken();
@@ -26,7 +25,48 @@ export const authApi = {
     setTokens(null);
   },
   me: () => api<T.Me>('/me'),
+  updateMe: (body: { first_name: string; last_name: string }) => api<T.Me>('/me', patch(body)),
   users: () => api<T.TenantUser[]>('/users'),
+  /**
+   * Con token restringido basta `new_password`; en autoservicio va también `current_password`.
+   * Cierra todas las sesiones y devuelve tokens nuevos: se guardan aquí.
+   */
+  async changePassword(body: { new_password: string; current_password?: string }): Promise<T.TokenResponse> {
+    const t = await api<T.TokenResponse>('/auth/password/change', post(body), false);
+    setTokens(t);
+    return t;
+  },
+  previewInvitation: (token: string) =>
+    api<T.InvitationPreview>('/auth/invitations/preview', post({ token }), false),
+  async acceptInvitation(body: T.InvitationAcceptIn): Promise<T.InvitationAcceptResult> {
+    const t = await api<T.InvitationAcceptResult>('/auth/invitations/accept', post(body), false);
+    setTokens(t);
+    return t;
+  },
+};
+
+/** SPEC 22: administración de usuarios (owner/admin). */
+export const usersApi = {
+  list: (params: { status?: T.MembershipStatus[]; q?: string } = {}) => {
+    const q = new URLSearchParams();
+    params.status?.forEach((s) => q.append('status', s));
+    if (params.q) q.set('q', params.q);
+    const qs = q.toString();
+    return api<T.TenantUser[]>(`/users${qs ? `?${qs}` : ''}`);
+  },
+  get: (id: string) => api<T.TenantUser>(`/users/${id}`),
+  /** Solo lo que cambia. */
+  update: (id: string, body: T.TenantUserPatch) => api<T.TenantUser>(`/users/${id}`, patch(body)),
+  remove: (id: string) => api<void>(`/users/${id}`, { method: 'DELETE' }),
+  resetPassword: (id: string) => api<T.TemporaryPassword>(`/users/${id}/password-reset`, post()),
+  invitations: (status: T.InvitationStatus[] = ['pending', 'expired']) => {
+    const q = new URLSearchParams();
+    status.forEach((s) => q.append('status', s));
+    return api<T.Invitation[]>(`/users/invitations?${q}`);
+  },
+  invite: (body: T.InvitationIn) => api<T.InvitationIssued>('/users/invitations', post(body)),
+  resendInvitation: (id: string) => api<T.InvitationIssued>(`/users/invitations/${id}/resend`, post()),
+  revokeInvitation: (id: string) => api<void>(`/users/invitations/${id}`, { method: 'DELETE' }),
 };
 
 export const integrationsApi = {
