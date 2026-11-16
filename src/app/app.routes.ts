@@ -21,6 +21,12 @@ export const routes: Routes = [
       import('./layouts/auth-layout/auth-layout').then((m) => m.AuthLayout),
     children: [
       {
+        // Sin esto, la URL raíz ("/") hace match con este layout sin hijo → pantalla en blanco.
+        path: '',
+        pathMatch: 'full',
+        redirectTo: '/documents',
+      },
+      {
         path: 'invitacion',
         loadComponent: () =>
           import('./features/auth/invitation/invitation.page').then((m) => m.InvitationPage),
